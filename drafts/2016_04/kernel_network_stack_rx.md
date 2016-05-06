@@ -2,7 +2,8 @@
 
 ## Background
 
-At [work](https://lmax.com) we practice continuous integration in terms of performance testing alongside different stages of functional testing.
+At [work](https://lmax.com) we practice continuous integration in terms of [performance testing](http://epickrram.blogspot.co.uk/2014/05/performance-testing-at-lmax-part-one.html) 
+alongside different stages of functional testing.
 
 In order to do this, we have a performance environment that fully replicates the hardware and software used in our production environments. 
 This is necessary in order to be able to find the limits of our system in terms of throughput and latency, and means that we make sure that the environments are 
@@ -10,7 +11,8 @@ identical, right down to the network cables.
 
 Since we like to be ahead of the curve, we are constantly trying to push the boundaries of our system to find out where it will fall over, and the nature of the failure mode.
 
-This involves running production-like load against the system at a much higher rate than we have ever seen in production. 
+This involves [running production-like load](http://epickrram.blogspot.co.uk/2014/08/performance-testing-at-lmax-part-three.html) 
+against the system at a much higher rate than we have ever seen in production. 
 We currently aim to be able to handle a constant throughput of 2-5 times
 the maximum peak throughput ever observed in production. 
 We believe that this will give us enough headroom to handle future capacity requirements.
@@ -22,6 +24,9 @@ Our Performance & Capacity team has a constant background task of:
 
 Using this process, we aim to ensure that we are able to handle spikes in demand, 
 and increases in user numbers, while still achieving a consistent and low latency-profile.
+
+There is actually a third step to this process, which is something like 'buy new hardware' or 
+'modify the system to do less work', since there is only so much than tuning will buy you.
 
 ## Identifying a bottleneck
 
@@ -36,8 +41,6 @@ In this case however, we could see from our monitoring that we were not sufferin
 so it was necessary to delve a little deeper into the network packet receive path in order to understand the problem.
 
 ## Understanding the data flow
-
-http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgb/ixgb_main.c#L1654
 
 The Linux kernel provides a number of counters that can give an indication of any problems in the network stack. 
 Since we are concerned with throughput, we will be most interested in things like queue depths and drop counts.
@@ -130,6 +133,7 @@ At this point, it is instructive to look at a function trace of the ksoftirqd pr
 This trace was generated using [ftrace](https://www.kernel.org/doc/Documentation/trace/ftrace.txt), and gives a high-level overview of the functions involved
 in processing the available packets on the network device.
 
+
     net_rx_action() {
       ixgbe_poll() {
         ixgbe_clean_tx_irq();
@@ -150,13 +154,7 @@ in processing the available packets on the network device.
             netif_receive_skb_internal() {
               __netif_receive_skb() {
                 __netif_receive_skb_core() {
-                  // add to socket receive queue
-                  // (http://lxr.free-electrons.com/source/include/linux/skbuff.h?v=4.0#L1491)
-                  packet_rcv() {
-                    skb_push();
-                    __bpf_prog_run();
-                    consume_skb();
-                  }
+                  ...
                   ip_rcv() {
                     ...
                     ip_rcv_finish() {
@@ -202,6 +200,7 @@ in processing the available packets on the network device.
                                           }
     ...
 
+
 The softirq handler performs the following steps:
 
 1.  Call the driver's poll method (in this case ixgbe_poll)
@@ -225,11 +224,12 @@ At this point in the data receive path, we could have throughput issues for two 
 2.  The application processing the destination socket is not dequeuing packets from the socket buffer fast enough
 
 
+### softirq back-pressure
+
 For the first case, we need to look at softnet stats (/proc/net/softnet_stat), which are updated in the network receive stack.
 
 The softnet stats are defined [here](http://lxr.free-electrons.com/source/include/linux/netdevice.h?v=4.0#L2444) as the per-cpu struct softnet_data, 
 which contains a few fields of interest: processed, time_squeeze and dropped.
-
 
 
 time_squeeze is updated if the softirq process cannot process all packets available in the network device ring-buffer before its cpu-time is up.
@@ -246,8 +246,82 @@ This behaviour will be driver-specific; in the Intel 10Gb driver, completed work
 to be processed at the end of a poll invocation.
 
 
+Given some example numbers, we can determine how many times the napi_poll function will be called for a softIRQ event:
+
+    net.core.netdev_budget = 300
+    net.core.dev_weight = 64
+
+    poll_count = (300 / 64) + 1 => 5
 
 
+If there are still packets to be processed in the network device ring-buffer, then the time_squeeze counter will be incremented for the 
+given CPU.
+
+
+The dropped counter is only used when the softirq process is attemping to add a packet to the backlog queue of another CPU.
+This can happen if [Receive Packet Steering](https://www.kernel.org/doc/Documentation/networking/scaling.txt) is enabled,
+but since we are only looking at UDP multicast without RPS, I won't go into the detail.
+
+So if our kernel helper thread is unable to move packets from the network device receive queue to the socket's receive buffer 
+fast enough, we can expect the time_squeeze column in /proc/net/softnet_stat to increase.
+
+The only tunable that we have at our disposal is the netdev_budget value. Increasing this will allow the softirq process to do more work.
+The process will still be limited by a total processing time of 2 jiffies though, so there will be an upper ceiling to packet throughput.
+
+Given the speeds that modern processors are capable of, it is unlikely that the softirq daemon will be unlikely to keep up with the flow of
+data. In order to give the kernel the best chance, make sure that there is no contention for CPU resources by assigning network interrupts to 
+a number of cores, and then using isolcpus to make sure that no other processes will be running on them.
+
+
+If the softirq daemon is squeezed frequently enough, or is just unable to get CPU time, then the network device will be forced to drop 
+packets from the wire. In this case, we can use ethtool to find the rx_missed count:
+
+    ethtool -S em1 | grep rx_missed
+    rx_missed_errors: 0
+
+alternatively, the same data can be found by looking at the following file:
+
+    /sys/class/net/<device-name>/statistics/rx_missed_errors
+
+
+For a full description of each of the statistics reported by ethtool, refer to [this document](http://lxr.free-electrons.com/source/Documentation/ABI/testing/sysfs-class-net-statistics).
+
+### Application back-pressure
+
+It is far more likely that our user programs will be the bottleneck here, and in order to determine whether that is the case, we need to have a look at the next stage 
+in the message receipt path. A continuation of this post will explore in more detail.
+
+
+## Summary
+
+For UDP-multicast traffic, we have seen in detail the code paths involved in moving an inbound network packet from a network device to a socket's input buffer.
+This stage can be broadly summarised as follows:
+
+1.  On packet receipt, the network device fires a hardware interrupt to the configured CPU
+2.  The hardware interrupt handler schedules a softIRQ on the same CPU
+3.  The softIRQ handler thread (ksoftirqd) will disable receive interrupts and poll the card for received data
+4.  Data will be copied from the network device's receive buffer into the destination socket's input buffer
+5.  After a certain amount of work has been done, or no inbound packets remain, the softirq daemon will re-enable receive interrupts and return
+
+In order to optimise for throughput, there are a couple of things to try tuning:
+
+1.  Increase the amount of work that the softirq daemon is allowed to do (net.core.netdev_budget)
+2.  Make sure that the ksoftirq process is not contending for CPU resource or being descheduled due to other hardware interrupts
+3.  Increase the size of the network device's ring-buffer (ethtool -g <device-name>)
+
+
+As with all performance-related experiments, never attempt to tune the system without being able to measure the impact of any changes in isolation.
+First, make sure that you know what the problem is (i.e. rx_missed_errors or time_squeeze is increasing), the add the relevant monitoring.
+For this particular case, we would want to be able to correlate the application experiencing message loss with a change in the 
+relevant counters, so recording and charting the numbers would be a good start.
+
+Once this has been done, changes can be made to system configuration to see if an improvement can be made.
+
+Lastly, any changes to the tuning parameters that I've mentioned MUST be configured via automation. We have sadly lost a fair 
+amount of time to manual changes being made on machines that have not persisted across reboots.
+
+It is all too easy (and I speak from experience) to make adjustments, but the optimal configuration, and then move on to something
+else. Do yourself and your colleagues a favour and automate!
 
 
 __netif_receive_skb_core increments softnetdata.processed (http://lxr.free-electrons.com/source/net/core/dev.c?v=4.0#L3646)
