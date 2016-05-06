@@ -175,7 +175,7 @@ in processing the available packets on the network device.
                                 flush_stack() {
                                   udp_queue_rcv_skb() {
                                     ... // data preparation
-                                    // deliver UDP packet
+                                    // [deliver UDP packet](http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1497)
                                     // http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1497
                                     // check if buffer is full
                                     // http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1584
