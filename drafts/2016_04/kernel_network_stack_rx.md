@@ -35,8 +35,223 @@ application processing thread, resulting in packets being dropped by the network
 In this case however, we could see from our monitoring that we were not suffering from any processing back-pressure, 
 so it was necessary to delve a little deeper into the network packet receive path in order to understand the problem.
 
-## Monitoring back-pressure
+## Understanding the data flow
 
 http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgb/ixgb_main.c#L1654
 
+The Linux kernel provides a number of counters that can give an indication of any problems in the network stack. 
+Since we are concerned with throughput, we will be most interested in things like queue depths and drop counts.
+
+Before looking at the available statistics, let's take a look at how a packet is handled once it is pulled off the wire.
+
+The journey begins in the network driver code; this is vendor-specific and in the majority of cases open source.
+In this example, we're working with an Intel 10Gb card, which uses the ixgbe driver. You can find out the driver used by a 
+network interface by using ethtool:
+
+    ethtool -i <device-name>
+
+This will generate output that looks something like this:
+
+    driver: ixgbe
+    version: 3.19.1-k
+    firmware-version: 0x546d0001
+    bus-info: 0000:41:00.0
+    supports-statistics: yes
+    supports-test: yes
+    supports-eeprom-access: yes
+    supports-register-dump: yes
+    supports-priv-flags: no
+
+The driver code back be found in the Linux kernel source [here](http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgbe/?v=4.0).
+
+### NAPI
+
+NAPI, or New API is a mechanism introduced into the kernel several years ago. More background can be read [here](http://www.linuxfoundation.org/collaborate/workgroups/networking/napi),
+but in summary, NAPI increases network receive performance by changing packet receipt from interrupt-driven to polling-mode.
+
+Previous to the introduction of NAPI, network cards would typically fire a hardware interrupt for each received packet. 
+Since an interrupt on a CPU will always cause suspension of the executing software, a high interrupt rate can interfere with software performance.
+NAPI addresses this by exposing a poll method to the kernel, which is periodically executed (actually via an interrupt). While the poll method is executing,
+receive interrupts for the network device are disabled. The effect of this is that the kernel can drain potentially multiple packets from the network device 
+receive buffer, thus increasing throughput at the same time as reducing the interrupt overhead.
+
+### Interrupt handling
+
+When the network device driver is initially configured, it first associates a handler function with the receive interrupt. 
+For the card that we're look at, this happens in a method called [ixgbe_request_msix_irqs](http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c?v=4.0#L2740):
+
+    request_irq(entry->vector, &ixgbe_msix_clean_rings, 0,
+       q_vector->name, q_vector);
+
+The ixgbe_msix_clean_rings method simply [schedules a NAPI poll](http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c?v=4.0#L2675), 
+and returns IRQ_HANDLED:
+
+    static irqreturn_t ixgbe_msix_clean_rings(int irq, void *data)
+    {
+        struct ixgbe_q_vector *q_vector = data;
+        ...
+        if (q_vector->rx.ring || q_vector->tx.ring)
+            napi_schedule(&q_vector->napi);
+
+        return IRQ_HANDLED;
+    }
+
+Scheduling the NAPI poll entails [adding some work](http://lxr.free-electrons.com/source/net/core/dev.c?v=4.0#L3022) to the per-cpu poll list maintained in the softnet_data structure:
+
+    static inline void ____napi_schedule(struct softnet_data *sd,
+                                         struct napi_struct *napi)
+    {
+        list_add_tail(&napi->poll_list, &sd->poll_list);
+        __raise_softirq_irqoff(NET_RX_SOFTIRQ);
+    }
+
+and then raising a softirq event.
+
+### softirq processing
+
+For more background on interrupt handling, the [Linux Device Drivers](https://lwn.net/Kernel/LDD3/) book has a chapters dedicated to this topic.
+Suffice to say, doing work inside of a hardware interrupt context is generally avoided within the kernel. One mechanism for dealing with this is 
+to use softirqs.
+
+Each CPU in the system has a bound process called ksoftirqd/<cpu_number>, which is responsible for processing softirq events.
+
+In this manner, when a hardware interrupt is received, the driver raises a softIRQ to be processed on the ksoftirqd process. So it is this 
+process that will be responsible for calling the drivers poll method.
+
+
+The softirq handler [net_rx_action](http://lxr.free-electrons.com/source/net/core/dev.c?v=4.0#L7475) is configured for network packet receive events during device initialisation.
+
+So, having followed the code this far, we can say that when a network packet is in the device's receive ring-buffer, the net_rx_action function will be the top-level 
+entry point for packet processing.
+
+### net_rx_action
+
+At this point, it is instructive to look at a function trace of the ksoftirqd process. 
+This trace was generated using [ftrace](https://www.kernel.org/doc/Documentation/trace/ftrace.txt), and gives a high-level overview of the functions involved
+in processing the available packets on the network device.
+
+    net_rx_action() {
+      ixgbe_poll() {
+        ixgbe_clean_tx_irq();
+        ixgbe_clean_rx_irq() {
+          ixgbe_fetch_rx_buffer() {
+            ... // allocate buffer for packet
+          } // returns the buffer containing packet data
+          ... // housekeeping
+          napi_gro_receive() {
+            // generic receive offload
+            dev_gro_receive() {
+              inet_gro_receive() {
+                udp4_gro_receive() {
+                  udp_gro_receive();
+                }
+              }
+            }
+            netif_receive_skb_internal() {
+              __netif_receive_skb() {
+                __netif_receive_skb_core() {
+                  // add to socket receive queue
+                  // (http://lxr.free-electrons.com/source/include/linux/skbuff.h?v=4.0#L1491)
+                  packet_rcv() {
+                    skb_push();
+                    __bpf_prog_run();
+                    consume_skb();
+                  }
+                  ip_rcv() {
+                    ...
+                    ip_rcv_finish() {
+                      ...
+                      ip_local_deliver() {
+                        ip_local_deliver_finish() {
+                          raw_local_deliver();
+                          udp_rcv() {
+                            __udp4_lib_rcv() {
+                              __udp4_lib_mcast_deliver() {
+                                ...
+                                // clone skb & deliver
+                                flush_stack() {
+                                  udp_queue_rcv_skb() {
+                                    ... // data preparation
+                                    // deliver UDP packet
+                                    // http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1497
+                                    // check if buffer is full
+                                    // http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1584
+                                    __udp_queue_rcv_skb() {
+                                      // deliver to socket queue
+                                      // http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1453
+                                      // check for delivery error
+                                      // http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1464
+                                      sock_queue_rcv_skb() {
+                                        ...
+                                        _raw_spin_lock_irqsave();
+                                        // enqueue packet to socket buffer list
+                                        // http://lxr.free-electrons.com/source/include/linux/skbuff.h?v=4.0#L1481
+                                        _raw_spin_unlock_irqrestore();
+                                        // wake up listeners
+                                        // http://lxr.free-electrons.com/source/net/core/sock.c?v=4.0#L474
+                                        sock_def_readable() {
+                                          __wake_up_sync_key() {
+                                            _raw_spin_lock_irqsave();
+                                            __wake_up_common() {
+                                              ep_poll_callback() {
+                                                ...
+                                                _raw_spin_unlock_irqrestore();
+                                              }
+                                            }
+                                            _raw_spin_unlock_irqrestore();
+                                          }
+    ...
+
+The softirq handler performs the following steps:
+
+1.  Call the driver's poll method (in this case ixgbe_poll)
+2.  Perform some GRO functions to group packets together into a larger work unit
+3.  Call the packet type's [handler function](http://lxr.free-electrons.com/source/net/core/dev.c?v=4.0#L1735) (ip_rcv) to walk down the protocol chain
+4.  Parse IP headers, perform checksumming then call ip_rcv_finish
+5.  The buffer's destination function is invoked, in this case udp_rcv 
+6.  Since these are multicast packets, __udp4_lib_mcast_deliver is called
+7.  The packet is copied and delivered to each registered UDP socket queue
+8.  In udp_queue_rcv_skb, buffers are checked and if space remains, the skb is added to the end of the socket's queue
+
+
+
+## Monitoring back-pressure
+
+When attempting to increase the throughput of an application, we need to understand where back-pressure is coming from.
+
+At this point in the data receive path, we could have throughput issues for two reasons:
+
+1.  The softirq handling mechanism cannot dequeue packets from the network device fast enough
+2.  The application processing the destination socket is not dequeuing packets from the socket buffer fast enough
+
+
+For the first case, we need to look at softnet stats (/proc/net/softnet_stat), which are updated in the network receive stack.
+
+The softnet stats are defined [here](http://lxr.free-electrons.com/source/include/linux/netdevice.h?v=4.0#L2444) as the per-cpu struct softnet_data, 
+which contains a few fields of interest: processed, time_squeeze and dropped.
+
+
+
+time_squeeze is updated if the softirq process cannot process all packets available in the network device ring-buffer before its cpu-time is up.
+The process is limited to 2 jiffies of processing time, or a certain amount of 'work'. There are a couple of sysctls that control these parameters:
+
+1.  net.core.netdev_budget - the total amount of processing to be done in one invocation of net_rx_action
+2.  net.core.dev_weight - an indicator to the network driver of how much work to do per invocation of its napi poll method
+
+The softirq daemon will continue to [call napi_poll](http://lxr.free-electrons.com/source/net/core/dev.c?v=4.0#L4655) until either the time has run out,
+or the amount of work reported as completed by the driver exceeds the value of net.core.netdev_budget.
+
+This behaviour will be driver-specific; in the Intel 10Gb driver, completed work will always be [reported as net.core.dev_weight]
+(http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c?v=4.0#L2727) if there are still packets 
+to be processed at the end of a poll invocation.
+
+
+
+
+
+
+__netif_receive_skb_core increments softnetdata.processed (http://lxr.free-electrons.com/source/net/core/dev.c?v=4.0#L3646)
+ip_rcv updates received, discarded, checksum errors, truncated packets (http://lxr.free-electrons.com/source/net/ipv4/ip_input.c?v=4.0#L363)
+flush_stack updates sock net rcvbuff, input errors (http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1628)
+udp_queue_rcv_skb updates rcvbuff errors on sock net (http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1585)
 
