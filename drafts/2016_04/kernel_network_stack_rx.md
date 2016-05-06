@@ -49,11 +49,11 @@ Before looking at the available statistics, let's take a look at how a packet is
 
 The journey begins in the network driver code; this is vendor-specific and in the majority of cases open source.
 In this example, we're working with an Intel 10Gb card, which uses the ixgbe driver. You can find out the driver used by a 
-network interface by using ethtool:
+network interface by using `ethtool`:
 
     ethtool -i <device-name>
 
-This will generate output that looks something like this:
+This will generate output that looks something like:
 
     driver: ixgbe
     version: 3.19.1-k
@@ -65,7 +65,7 @@ This will generate output that looks something like this:
     supports-register-dump: yes
     supports-priv-flags: no
 
-The driver code back be found in the Linux kernel source [here](http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgbe/?v=4.0).
+The driver code can be found in the Linux kernel source [here](http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgbe/?v=4.0).
 
 ### NAPI
 
@@ -80,13 +80,15 @@ receive buffer, thus increasing throughput at the same time as reducing the inte
 
 ### Interrupt handling
 
-When the network device driver is initially configured, it first associates a handler function with the receive interrupt. 
-For the card that we're look at, this happens in a method called [ixgbe_request_msix_irqs](http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c?v=4.0#L2740):
+When the network device driver is initially configured, it first associates a handler function with the receive interrupt.
+This function will be invoked whenever the CPU receives a hardware interrupt from the network card. 
+For the card that we're looking at, this happens in a method called [ixgbe_request_msix_irqs](http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c?v=4.0#L2740):
 
     request_irq(entry->vector, &ixgbe_msix_clean_rings, 0,
        q_vector->name, q_vector);
 
-The ixgbe_msix_clean_rings method simply [schedules a NAPI poll](http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c?v=4.0#L2675), 
+So when an interrupt is received by the CPU, the ixgbe_msix_clean_rings method simply 
+[schedules a NAPI poll](http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c?v=4.0#L2675), 
 and returns IRQ_HANDLED:
 
     static irqreturn_t ixgbe_msix_clean_rings(int irq, void *data)
@@ -99,7 +101,7 @@ and returns IRQ_HANDLED:
         return IRQ_HANDLED;
     }
 
-Scheduling the NAPI poll entails [adding some work](http://lxr.free-electrons.com/source/net/core/dev.c?v=4.0#L3022) to the per-cpu poll list maintained in the softnet_data structure:
+Scheduling the NAPI poll entails [adding some work](http://lxr.free-electrons.com/source/net/core/dev.c?v=4.0#L3022) to the per-cpu poll list maintained in the `softnet_data` structure:
 
     static inline void ____napi_schedule(struct softnet_data *sd,
                                          struct napi_struct *napi)
@@ -108,29 +110,32 @@ Scheduling the NAPI poll entails [adding some work](http://lxr.free-electrons.co
         __raise_softirq_irqoff(NET_RX_SOFTIRQ);
     }
 
-and then raising a softirq event.
+and then raising a `softirq` event. Once the `softirq` event has been raised, the driver knows that the poll function will be called in the near future.
 
 ### softirq processing
 
-For more background on interrupt handling, the [Linux Device Drivers](https://lwn.net/Kernel/LDD3/) book has a chapters dedicated to this topic.
-Suffice to say, doing work inside of a hardware interrupt context is generally avoided within the kernel. One mechanism for dealing with this is 
-to use softirqs.
+For more background on interrupt handling, the [Linux Device Drivers](https://lwn.net/Kernel/LDD3/) book has a chapter dedicated to this topic.
+Suffice to say, doing work inside of a hardware interrupt context is generally avoided within the kernel; while handling a hardware interrupt
+a CPU is not executing user or kernel software threads, and no other hardware interrupts can be handled until the current routine is complete. 
+One mechanism for dealing with this is to use `softirqs`.
 
-Each CPU in the system has a bound process called ksoftirqd/<cpu_number>, which is responsible for processing softirq events.
+Each CPU in the system has a bound process called `ksoftirqd/<cpu_number>`, which is responsible for processing `softirq` events.
 
-In this manner, when a hardware interrupt is received, the driver raises a softIRQ to be processed on the ksoftirqd process. So it is this 
-process that will be responsible for calling the drivers poll method.
+In this manner, when a hardware interrupt is received, the driver raises a softIRQ to be processed on the `ksoftirqd` process. So it is this 
+process that will be responsible for calling the driver's `poll` method.
 
 
-The softirq handler [net_rx_action](http://lxr.free-electrons.com/source/net/core/dev.c?v=4.0#L7475) is configured for network packet receive events during device initialisation.
+The `softirq` handler [`net_rx_action`](http://lxr.free-electrons.com/source/net/core/dev.c?v=4.0#L7475) 
+is configured for network packet receive events during device initialisation. All `softirq` events of type `NET_RX_SOFTIRQ`
+will be handled by the `net_rx_action` function.
 
-So, having followed the code this far, we can say that when a network packet is in the device's receive ring-buffer, the net_rx_action function will be the top-level 
+So, having followed the code this far, we can say that when a network packet is in the device's receive ring-buffer, the `net_rx_action` function will be the top-level 
 entry point for packet processing.
 
 ### net_rx_action
 
-At this point, it is instructive to look at a function trace of the ksoftirqd process. 
-This trace was generated using [ftrace](https://www.kernel.org/doc/Documentation/trace/ftrace.txt), and gives a high-level overview of the functions involved
+At this point, it is instructive to look at a function trace of the `ksoftirqd` process. 
+This trace was generated using [`ftrace`](https://www.kernel.org/doc/Documentation/trace/ftrace.txt), and gives a high-level overview of the functions involved
 in processing the available packets on the network device.
 
 
@@ -201,16 +206,16 @@ in processing the available packets on the network device.
     ...
 
 
-The softirq handler performs the following steps:
+The `softirq` handler performs the following steps:
 
-1.  Call the driver's poll method (in this case ixgbe_poll)
-2.  Perform some GRO functions to group packets together into a larger work unit
-3.  Call the packet type's [handler function](http://lxr.free-electrons.com/source/net/core/dev.c?v=4.0#L1735) (ip_rcv) to walk down the protocol chain
-4.  Parse IP headers, perform checksumming then call ip_rcv_finish
-5.  The buffer's destination function is invoked, in this case udp_rcv 
-6.  Since these are multicast packets, __udp4_lib_mcast_deliver is called
+1.  Call the driver's poll method (in this case `ixgbe_poll`)
+2.  Perform some [GRO](https://lwn.net/Articles/358910/) functions to group packets together into a larger work unit
+3.  Call the packet type's [handler function](http://lxr.free-electrons.com/source/net/core/dev.c?v=4.0#L1735) (`ip_rcv`) to walk down the protocol chain
+4.  Parse IP headers, perform checksumming then call `ip_rcv_finish`
+5.  The buffer's destination function is invoked, in this case `udp_rcv` 
+6.  Since these are multicast packets, `__udp4_lib_mcast_deliver` is called
 7.  The packet is copied and delivered to each registered UDP socket queue
-8.  In udp_queue_rcv_skb, buffers are checked and if space remains, the skb is added to the end of the socket's queue
+8.  In `udp_queue_rcv_skb`, buffers are checked and if space remains, the skb is added to the end of the socket's queue
 
 
 
@@ -220,33 +225,34 @@ When attempting to increase the throughput of an application, we need to underst
 
 At this point in the data receive path, we could have throughput issues for two reasons:
 
-1.  The softirq handling mechanism cannot dequeue packets from the network device fast enough
+1.  The `softirq` handling mechanism cannot dequeue packets from the network device fast enough
 2.  The application processing the destination socket is not dequeuing packets from the socket buffer fast enough
 
 
 ### softirq back-pressure
 
-For the first case, we need to look at softnet stats (/proc/net/softnet_stat), which are updated in the network receive stack.
+For the first case, we need to look at softnet stats (`/proc/net/softnet_stat`), which are maintained by the network receive stack.
 
-The softnet stats are defined [here](http://lxr.free-electrons.com/source/include/linux/netdevice.h?v=4.0#L2444) as the per-cpu struct softnet_data, 
-which contains a few fields of interest: processed, time_squeeze and dropped.
+The softnet stats are defined [here](http://lxr.free-electrons.com/source/include/linux/netdevice.h?v=4.0#L2444) as the per-cpu struct `softnet_data`, 
+which contains a few fields of interest: `processed`, `time_squeeze` and `dropped`.
 
+`processed` is the total number of packets processed, so is a good indicator of total throughput.
 
-time_squeeze is updated if the softirq process cannot process all packets available in the network device ring-buffer before its cpu-time is up.
+`time_squeeze` is updated if the `ksoftirq` process cannot process all packets available in the network device ring-buffer before its cpu-time is up.
 The process is limited to 2 jiffies of processing time, or a certain amount of 'work'. There are a couple of sysctls that control these parameters:
 
-1.  net.core.netdev_budget - the total amount of processing to be done in one invocation of net_rx_action
-2.  net.core.dev_weight - an indicator to the network driver of how much work to do per invocation of its napi poll method
+1.  `net.core.netdev_budget` - the total amount of processing to be done in one invocation of net_rx_action
+2.  `net.core.dev_weight` - an indicator to the network driver of how much work to do per invocation of its napi poll method
 
-The softirq daemon will continue to [call napi_poll](http://lxr.free-electrons.com/source/net/core/dev.c?v=4.0#L4655) until either the time has run out,
-or the amount of work reported as completed by the driver exceeds the value of net.core.netdev_budget.
+The `ksoftirq` daemon will continue to [call `napi_poll`](http://lxr.free-electrons.com/source/net/core/dev.c?v=4.0#L4655) until either the time has run out,
+or the amount of work reported as completed by the driver exceeds the value of `net.core.netdev_budget`.
 
-This behaviour will be driver-specific; in the Intel 10Gb driver, completed work will always be [reported as net.core.dev_weight]
-(http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c?v=4.0#L2727) if there are still packets 
+This behaviour will be driver-specific; in the Intel 10Gb driver, completed work will always be 
+[reported as `net.core.dev_weight`](http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c?v=4.0#L2727) if there are still packets 
 to be processed at the end of a poll invocation.
 
 
-Given some example numbers, we can determine how many times the napi_poll function will be called for a softIRQ event:
+Given some example numbers, we can determine how many times the napi_poll function will be called for a `softIRQ` event:
 
     net.core.netdev_budget = 300
     net.core.dev_weight = 64
@@ -254,29 +260,34 @@ Given some example numbers, we can determine how many times the napi_poll functi
     poll_count = (300 / 64) + 1 => 5
 
 
-If there are still packets to be processed in the network device ring-buffer, then the time_squeeze counter will be incremented for the 
+If there are still packets to be processed in the network device ring-buffer, then the `time_squeeze` counter will be incremented for the 
 given CPU.
 
 
-The dropped counter is only used when the softirq process is attemping to add a packet to the backlog queue of another CPU.
+The `dropped` counter is only used when the `ksoftirq` process is attemping to add a packet to the backlog queue of another CPU.
 This can happen if [Receive Packet Steering](https://www.kernel.org/doc/Documentation/networking/scaling.txt) is enabled,
 but since we are only looking at UDP multicast without RPS, I won't go into the detail.
 
 So if our kernel helper thread is unable to move packets from the network device receive queue to the socket's receive buffer 
-fast enough, we can expect the time_squeeze column in /proc/net/softnet_stat to increase.
+fast enough, we can expect the `time_squeeze` column in `/proc/net/softnet_stat` to increase over time.
 
-The only tunable that we have at our disposal is the netdev_budget value. Increasing this will allow the softirq process to do more work.
+In order to interpret the file, it is worth looking at 
+[the implementation](http://lxr.free-electrons.com/source/net/core/net-procfs.c?v=4.0#L146). Each row represents a CPU-local instance of the 
+`softnet_stat` struct (starting with CPU0 at the top), and the third column is the `time_squeeze` entry.
+
+The only tunable that we have at our disposal is the `netdev_budget` value. Increasing this will allow the `ksoftirq` process to do more work.
 The process will still be limited by a total processing time of 2 jiffies though, so there will be an upper ceiling to packet throughput.
 
-Given the speeds that modern processors are capable of, it is unlikely that the softirq daemon will be unlikely to keep up with the flow of
-data. In order to give the kernel the best chance, make sure that there is no contention for CPU resources by assigning network interrupts to 
-a number of cores, and then using isolcpus to make sure that no other processes will be running on them.
+Given the speeds that modern processors are capable of, it is unlikely that the `ksoftirq` daemon will be unable to keep up with the flow of
+data. In order to give the kernel the best chance to do so, make sure that there is no contention for CPU resources by assigning network interrupts to 
+a number of cores, and then using isolcpus to make sure that no other processes will be running on them. This will give the `ksoftirq` daemon the best
+chance of copying the inbound packets in a timely manner.
 
 
-If the softirq daemon is squeezed frequently enough, or is just unable to get CPU time, then the network device will be forced to drop 
-packets from the wire. In this case, we can use ethtool to find the rx_missed count:
+If the `ksoftirq` daemon is squeezed frequently enough, or is just unable to get CPU time, then the network device will be forced to drop 
+packets from the wire. In this case, we can use ethtool to find the rx_missed_errors count:
 
-    ethtool -S em1 | grep rx_missed
+    ethtool -S <device-name> | grep rx_missed
     rx_missed_errors: 0
 
 alternatively, the same data can be found by looking at the following file:
@@ -284,12 +295,14 @@ alternatively, the same data can be found by looking at the following file:
     /sys/class/net/<device-name>/statistics/rx_missed_errors
 
 
-For a full description of each of the statistics reported by ethtool, refer to [this document](http://lxr.free-electrons.com/source/Documentation/ABI/testing/sysfs-class-net-statistics).
+For a full description of each of the statistics reported by `ethtool`, refer to 
+[this document](http://lxr.free-electrons.com/source/Documentation/ABI/testing/sysfs-class-net-statistics).
 
 ### Application back-pressure
 
-It is far more likely that our user programs will be the bottleneck here, and in order to determine whether that is the case, we need to have a look at the next stage 
-in the message receipt path. A continuation of this post will explore in more detail.
+It is far more likely that our user programs will be the bottleneck here, and in order to 
+determine whether that is the case, we need to look at the next stage 
+in the message receipt path. A continuation of this post will explore that area in more detail.
 
 
 ## Summary
@@ -298,20 +311,21 @@ For UDP-multicast traffic, we have seen in detail the code paths involved in mov
 This stage can be broadly summarised as follows:
 
 1.  On packet receipt, the network device fires a hardware interrupt to the configured CPU
-2.  The hardware interrupt handler schedules a softIRQ on the same CPU
-3.  The softIRQ handler thread (ksoftirqd) will disable receive interrupts and poll the card for received data
+2.  The hardware interrupt handler schedules a `softIRQ` on the same CPU
+3.  The `softIRQ` handler thread (`ksoftirqd`) will disable receive interrupts and poll the card for received data
 4.  Data will be copied from the network device's receive buffer into the destination socket's input buffer
-5.  After a certain amount of work has been done, or no inbound packets remain, the softirq daemon will re-enable receive interrupts and return
+5.  After a certain amount of work has been done, or no inbound packets remain, the `ksoftirq` daemon will re-enable receive interrupts and return
 
 In order to optimise for throughput, there are a couple of things to try tuning:
 
-1.  Increase the amount of work that the softirq daemon is allowed to do (net.core.netdev_budget)
-2.  Make sure that the ksoftirq process is not contending for CPU resource or being descheduled due to other hardware interrupts
-3.  Increase the size of the network device's ring-buffer (ethtool -g <device-name>)
+1.  Increase the amount of work that the `ksoftirq` daemon is allowed to do (`net.core.netdev_budget`)
+2.  Make sure that the `ksoftirq` daemon is not contending for CPU resource or being descheduled due to other hardware interrupts
+3.  Increase the size of the network device's ring-buffer (`ethtool -g <device-name>`)
 
 
 As with all performance-related experiments, never attempt to tune the system without being able to measure the impact of any changes in isolation.
-First, make sure that you know what the problem is (i.e. rx_missed_errors or time_squeeze is increasing), the add the relevant monitoring.
+
+First, make sure that you know what the problem is (i.e. `rx_missed_errors` or `time_squeeze` is increasing), the add the relevant monitoring.
 For this particular case, we would want to be able to correlate the application experiencing message loss with a change in the 
 relevant counters, so recording and charting the numbers would be a good start.
 
@@ -320,8 +334,8 @@ Once this has been done, changes can be made to system configuration to see if a
 Lastly, any changes to the tuning parameters that I've mentioned MUST be configured via automation. We have sadly lost a fair 
 amount of time to manual changes being made on machines that have not persisted across reboots.
 
-It is all too easy (and I speak from experience) to make adjustments, but the optimal configuration, and then move on to something
-else. Do yourself and your colleagues a favour and automate!
+It is all too easy (and I speak as a repeat offender) to make adjustments, find the optimal configuration, and then move on to something
+else. Do yourself and your colleagues a favour and automate configuration management!
 
 
 __netif_receive_skb_core increments softnetdata.processed (http://lxr.free-electrons.com/source/net/core/dev.c?v=4.0#L3646)
