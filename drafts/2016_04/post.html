@@ -40,24 +40,24 @@ ALL  em1      packet_rcv
 <p>So our inbound packet will be processed by the capture hooks, even if no packet capture is running (this then must presumably be very cheap), before being passed to the correct protocol handler, in this case <code>ip_rcv</code>.</p>
 <h2 id="the-socket-buffer">The socket buffer</h2>
 <p>As discussed previously, each socket on the system has a receive-side FIFO queue that is written to by the kernel, and read from by the user application.</p>
-<p><a href="http://lxr.free-electrons.com/source/net/ipv4/ip_input.c?v=4.0#L376"><code>ip_rcv</code></a> starts by getting its own copy of the incoming packet, copying if the packet is already shared. If the copy fails due to lack of memory, then the packet is discarded, and the <code>Discard</code> count of ipstats is incremented. Other checks made at this point include the IP checksum, header-length check and truncation check, each of which update the relevant metrics in the ipstats table.</p>
+<p><a href="http://lxr.free-electrons.com/source/net/ipv4/ip_input.c?v=4.0#L376"><code>ip_rcv</code></a> starts by getting its own copy of the incoming packet, copying if the packet is already shared. If the copy fails due to lack of memory, then the packet is discarded, and the <code>Discard</code> count of the global ip statistics table is incremented. Other checks made at this point include the IP checksum, header-length check and truncation check, each of which update the relevant metrics.</p>
 <p>Before calling the <code>ip_rcv_finish</code> function, the packet is diverted through the <code>netfilter</code> module where software-based network filtering can be applied.</p>
 <p>Assuming that the packet is not dropped by a filter, <a href="http://lxr.free-electrons.com/source/net/ipv4/ip_input.c?v=4.0#L312"><code>ip_rcv_finish</code></a> passes the packet on to the next protocol-handler in the chain.</p>
 <p>In the internals of the <a href="http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1749"><code>udp_rcv</code></a> function, we finally get to the point of accessing the socket FIFO queue.</p>
-<p>Simple validation performed at this point includes packet-length check and checksum. Failure of these checks will cause the relevant statistics to be updated in the udpstats table.</p>
+<p>Simple validation performed at this point includes packet-length check and checksum. Failure of these checks will cause the relevant statistics to be updated in the global udp statistics table.</p>
 <p>Because the traffic we're tracing <a href="http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1801">is multicast</a>, the next handler function is <a href="http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1660"><code>__udp4_lib_mcast_deliver</code></a>.</p>
 <p>With some exotic locking in place, the kernel determines how many different sockets this multicast packet needs to be delivered to. It is worth noting here that there is a smallish number (<code>256 / sizeof( struct sock)</code>) of sockets that can be listening to a given multicast address before the possibility of greater lock-contention creeps in.</p>
 <p>An effort is made to enumerate the registered sockets with a lock held, then perform the packet dispatching without a lock. However, if the number of registered sockets exceeds the specified threshold, then packet dispatch (the <code>flush_stack</code> function) will be handled while a lock is held.</p>
 <p>Once in <a href="http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1614"><code>flush_stack</code></a>, the packet is copied for each registered socket, and pushed onto the FIFO queue.</p>
-<p>If the kernel is unable to allocate memory in order to copy the buffer, the socket's drop-count will be incremented, along with the RcvBufErrors and InErrors metrics in the udpstats table.</p>
+<p>If the kernel is unable to allocate memory in order to copy the buffer, the socket's drop-count will be incremented, along with the <code>RcvBufErrors</code> and <code>InErrors</code> metrics in the global udp statistics table.</p>
 <p>After another checksum test, we are finally at the point where socket-buffer overflow <a href="http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1584">is tested</a>:</p>
 <pre><code>if (sk_rcvqueues_full(sk, sk-&gt;sk_rcvbuf)) {
     UDP_INC_STATS_BH(sock_net(sk), UDP_MIB_RCVBUFERRORS,
                      is_udplite);
     goto drop;
 }</code></pre>
-<p>If the size of the socket's backlog queue, plus the memory used in the receive queue is greater than the socket receive buffer size, then the RcvBufferErrors and InErrors metrics are updated in the udpstats table, along with the socket's drop count.</p>
-<p>To <a href="http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1594">safely handle multi-threaded access to the socket buffer</a>, if an application is currently reading from a socket, then the inbound packet will be queued to the socket's <a href="http://lxr.free-electrons.com/source/include/net/sock.h?v=4.0#L335">backlog queue</a>. The backlog queue will be processed during the handling of the next sortIRQ event.</p>
+<p>If the size of the socket's backlog queue, plus the memory used in the receive queue is greater than the socket receive buffer size, then the <code>RcvBufferErrors</code> and <code>InErrors</code> metrics are updated in the global udp statitics table, along with the socket's drop count.</p>
+<p>To <a href="http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1594">safely handle multi-threaded access to the socket buffer</a>, if an application has locked the socket, then the inbound packet will be queued to the socket's <a href="http://lxr.free-electrons.com/source/include/net/sock.h?v=4.0#L335">backlog queue</a>. The backlog queue will be processed when the lock owner releases the lock.</p>
 <p>Otherwise, pending more checks that socket memory limits have not be exceeded, the packet is added to the socket's <a href="http://lxr.free-electrons.com/source/net/core/sock.c?v=4.0#L439"><code>sk_receive_queue</code></a>.</p>
 <p>Finally, once the packet has been delivered to the socket's receive queue, notification is <a href="http://lxr.free-electrons.com/source/net/core/sock.c?v=4.0#L474">sent to any interested listeners</a>.</p>
 <h2 id="kernel-statistics">Kernel statistics</h2>
@@ -74,11 +74,11 @@ Udp: 281604018683 4      261929024 42204463516 261929024    0            0</code
 <p>This file contains socket-specific statistics, which only live for the lifetime of a socket. As we have seen from the code so far, each time the <code>RcvbufErrors</code> metric has been incremented, so too has the corresponding <code>sk_drops</code> value for the target socket.</p>
 <p>So if we need to differentiate between drop events on a per-socket basis, this file is what we need to observe. The contents below can be explained by looking at the <a href="http://lxr.free-electrons.com/source/net/ipv4/udp.c#L2517">handler function</a> for socket data:</p>
 <pre><code>[pricem@metal ~]# cat /proc/net/udp
-sl  local_address rem_address   st tx_queue rx_queue tr tm-&gt;when retrnsmt   uid  timeout inode ref pointer drops
-47: 00000000:B87A 00000000:0000 07 00000000:00000000 ...   512        0 239982339 2 ffff88052885c440 0     
-95: 4104C1EF:38AA 00000000:0000 07 00000000:00000000 ...   512        0 239994712 2 ffff8808507ed800 0     
-95: BC04C1EF:38AA 00000000:0000 07 00000000:00000000 ...   512        0 175113818 2 ffff881054a8b080 0     
-95: BE04C1EF:38AA 00000000:0000 07 00000000:00000000 ...   512        0 175113817 2 ffff881054a8b440 0     
+sl  local_address rem_address   st tx_queue rx_queue ... inode ref pointer drops
+47: 00000000:B87A 00000000:0000 07 00000000:00000000 ...  239982339 2 ffff88052885c440 0     
+95: 4104C1EF:38AA 00000000:0000 07 00000000:00000000 ...  239994712 2 ffff8808507ed800 0     
+95: BC04C1EF:38AA 00000000:0000 07 00000000:00000000 ...  175113818 2 ffff881054a8b080 0     
+95: BE04C1EF:38AA 00000000:0000 07 00000000:00000000 ...  175113817 2 ffff881054a8b440 0     
 ...</code></pre>
 <p>For observing back-pressure, we are interested in the drops column, and the rx_queue column, which is a snapshot of the amount of queued data at the time of reading. Local and remote addresses are hex-encoded <code>ip:port</code> addresses.</p>
 <p>Monitoring this file can tell us if our application is falling behind the packet arrival rate (increase in <code>rx_queue</code>), or whether the kernel was unable to copy a packet into the socket buffer due to it already being full (increase in <code>drops</code>).</p>
@@ -90,4 +90,12 @@ sl  local_address rem_address   st tx_queue rx_queue tr tm-&gt;when retrnsmt   u
 <li><a href="http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1473"><code>udp:udp_fail_queue_rcv_skb</code></a>: called shortly after the <code>sock_rcvqueue_full</code> event trace for the same reason.</li>
 </ol>
 <p>These events can be captured using Linux kernel tracing tools such as <a href="https://perf.wiki.kernel.org/index.php/Main_Page"><code>perf</code></a> or <a href="https://www.kernel.org/doc/Documentation/trace/ftrace.txt"><code>ftrace</code></a>.</p>
-<p>TODO: how does /sys/class/net/p3p1/statistics/rx_dropped get populated by the kernel? TODO: double-check the code that updates device-side drops/rx-ring overflow.</p>
+<h2 id="summary">Summary</h2>
+<p>Let's just recap the points of interest for monitoring throughput issues in the network receive path.</p>
+<ol style="list-style-type: decimal">
+<li><code>/proc/net/softnet_stat</code>: contains statistics updated by the ksoftirq daemon. Useful metrics are processed, timesqueeze and dropped.</li>
+<li><code>/proc/net/snmp</code>: contains system-wide statistics for IP, TCP, UDP. Useful metrics indicate memory exhaustion, buffer exhaustion, etc.</li>
+<li><code>/proc/net/dev</code>: contains statistics provided by network devices present on the system. Some supplied statistics are driver-specific.</li>
+<li><code>/sys/class/net/DEV_NAME/statistics</code>: provides <a href="http://lxr.free-electrons.com/source/include/uapi/linux/if_link.h?v=4.0#L41">more detailed statistics</a>.</li>
+<li><code>/proc/net/udp</code>: contains per-socket information. Useful for monitoring queue depths/drops for a particular socket.</li>
+</ol>

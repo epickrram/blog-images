@@ -86,8 +86,8 @@ and read from by the user application.
 
 [`ip_rcv`](http://lxr.free-electrons.com/source/net/ipv4/ip_input.c?v=4.0#L376) starts by getting its own copy of the
 incoming packet, copying if the packet is already shared. If the copy fails due to lack of memory, then the packet is
-discarded, and the `Discard` count of ipstats is incremented. Other checks made at this point include the IP checksum,
-header-length check and truncation check, each of which update the relevant metrics in the ipstats table.
+discarded, and the `Discard` count of the global ip statistics table is incremented. Other checks made at this point include the IP checksum,
+header-length check and truncation check, each of which update the relevant metrics.
   
   
 Before calling the `ip_rcv_finish` function, the packet is diverted through the `netfilter` module where software-based
@@ -105,7 +105,7 @@ finally get to the point of accessing the socket FIFO queue.
   
   
 Simple validation performed at this point includes packet-length check and checksum. Failure of these checks
-will cause the relevant statistics to be updated in the udpstats table.
+will cause the relevant statistics to be updated in the global udp statistics table.
   
   
 
@@ -125,7 +125,7 @@ Once in [`flush_stack`](http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.
 registered socket, and pushed onto the FIFO queue.
 
 If the kernel is unable to allocate memory in order to copy the buffer, the socket's drop-count will be incremented, along
-with the RcvBufErrors and InErrors metrics in the udpstats table. 
+with the `RcvBufErrors` and `InErrors` metrics in the global udp statistics table. 
   
   
 
@@ -139,13 +139,13 @@ After another checksum test, we are finally at the point where socket-buffer ove
     }
 
 If the size of the socket's backlog queue, plus the memory used in the receive queue is greater than the socket receive buffer size, then the 
-RcvBufferErrors and InErrors metrics are updated in the udpstats table, along with the socket's drop count.
+`RcvBufferErrors` and `InErrors` metrics are updated in the global udp statitics table, along with the socket's drop count.
   
   
 To [safely handle multi-threaded access to the socket buffer](http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1594), 
-if an application is currently reading from a socket, then the inbound packet will be queued to the socket's 
+if an application has locked the socket, then the inbound packet will be queued to the socket's 
 [backlog queue](http://lxr.free-electrons.com/source/include/net/sock.h?v=4.0#L335). The backlog queue will be processed 
-during the handling of the next sortIRQ event.
+when the lock owner releases the lock.
 
 Otherwise, pending more checks that socket memory limits have not be exceeded, the packet is added to the socket's 
 [`sk_receive_queue`](http://lxr.free-electrons.com/source/net/core/sock.c?v=4.0#L439).
@@ -240,10 +240,19 @@ These events can be captured using Linux kernel tracing tools such as
 
 
 
+## Summary
 
-TODO: how does /sys/class/net/p3p1/statistics/rx_dropped get populated by the kernel?
-TODO: double-check the code that updates device-side drops/rx-ring overflow.
-TODO: image showing backlog and rcvqueue of socket buffer.
+Let's just recap the points of interest for monitoring throughput issues in the network receive path.
+
+  
+  
+1.  `/proc/net/softnet_stat`: contains statistics updated by the ksoftirq daemon. Useful metrics are processed, timesqueeze and dropped.
+2.  `/proc/net/snmp`: contains system-wide statistics for IP, TCP, UDP. Useful metrics indicate memory exhaustion, buffer exhaustion, etc.
+3.  `/proc/net/dev`: contains statistics provided by network devices present on the system. Some supplied statistics are driver-specific.
+4.  `/sys/class/net/DEV_NAME/statistics`: provides [more detailed statistics](http://lxr.free-electrons.com/source/include/uapi/linux/if_link.h?v=4.0#L41).
+5.  `/proc/net/udp`: contains per-socket information. Useful for monitoring queue depths/drops for a particular socket.
+
+
 
 
 
