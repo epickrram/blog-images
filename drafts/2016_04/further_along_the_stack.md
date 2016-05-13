@@ -200,11 +200,11 @@ The contents below can be explained by looking at the
 for socket data:
 
     [pricem@metal ~]# cat /proc/net/udp
-    sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode ref pointer drops
-    47: 00000000:B87A 00000000:0000 07 00000000:00000000 00:00000000 00000000   512        0 239982339 2 ffff88052885c440 0     
-    95: 4104C1EF:38AA 00000000:0000 07 00000000:00000000 00:00000000 00000000   512        0 239994712 2 ffff8808507ed800 0     
-    95: BC04C1EF:38AA 00000000:0000 07 00000000:00000000 00:00000000 00000000   512        0 175113818 2 ffff881054a8b080 0     
-    95: BE04C1EF:38AA 00000000:0000 07 00000000:00000000 00:00000000 00000000   512        0 175113817 2 ffff881054a8b440 0     
+    sl  local_address rem_address   st tx_queue rx_queue ... inode ref pointer drops
+    47: 00000000:B87A 00000000:0000 07 00000000:00000000 ...  239982339 2 ffff88052885c440 0     
+    95: 4104C1EF:38AA 00000000:0000 07 00000000:00000000 ...  239994712 2 ffff8808507ed800 0     
+    95: BC04C1EF:38AA 00000000:0000 07 00000000:00000000 ...  175113818 2 ffff881054a8b080 0     
+    95: BE04C1EF:38AA 00000000:0000 07 00000000:00000000 ...  175113817 2 ffff881054a8b440 0     
     ...
   
   
@@ -222,27 +222,28 @@ whether the kernel was unable to copy a packet into the socket buffer due to it 
 
 ## Tracepoints
 
+If we wish to capture more data about packets that are being dropped, there a three tracepoints that are of interest.
 
 
+1.  [`sock:sock_rcvqueue_full`](http://lxr.free-electrons.com/source/net/core/sock.c?v=4.0#L447): called when the amount of 
+memory already allocated to the socket buffer is greater than or equal to the configured socket buffer size.
+1.  [`sock:sock_exceed_buf_limit`](http://lxr.free-electrons.com/source/net/core/sock.c?v=4.0#L2084): called when the 
+kernel is unable to allocate more memory for the socket buffer.
+1.  [`udp:udp_fail_queue_rcv_skb`](http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1473): called shortly after 
+the `sock_rcvqueue_full` event trace for the same reason.
 
-`/proc/net/udp`: http://lxr.free-electrons.com/source/net/ipv4/udp.c#L2538
-
-`/proc/net/snmp`: http://lxr.free-electrons.com/source/net/ipv4/proc.c?v=4.0#L176
-
-Diff between InErrors and RevbufErrors:
-
-Udp: InDatagrams NoPorts InErrors OutDatagrams RcvbufErrors SndbufErrors InCsumErrors
-Udp: 275707389845 4 261757187 41217478199 261757187 0 0
-
-
-InErrors > RcvbufErrors -> allocation failure when cloning skb.http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1626
+  
+  
+These events can be captured using Linux kernel tracing tools such as 
+[`perf`](https://perf.wiki.kernel.org/index.php/Main_Page) or 
+[`ftrace`](https://www.kernel.org/doc/Documentation/trace/ftrace.txt).
 
 
 
 
 TODO: how does /sys/class/net/p3p1/statistics/rx_dropped get populated by the kernel?
 TODO: double-check the code that updates device-side drops/rx-ring overflow.
-
+TODO: image showing backlog and rcvqueue of socket buffer.
 
 
 

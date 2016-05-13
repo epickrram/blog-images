@@ -75,17 +75,19 @@ Udp: 281604018683 4      261929024 42204463516 261929024    0            0</code
 <p>So if we need to differentiate between drop events on a per-socket basis, this file is what we need to observe. The contents below can be explained by looking at the <a href="http://lxr.free-electrons.com/source/net/ipv4/udp.c#L2517">handler function</a> for socket data:</p>
 <pre><code>[pricem@metal ~]# cat /proc/net/udp
 sl  local_address rem_address   st tx_queue rx_queue tr tm-&gt;when retrnsmt   uid  timeout inode ref pointer drops
-47: 00000000:B87A 00000000:0000 07 00000000:00000000 00:00000000 00000000   512        0 239982339 2 ffff88052885c440 0     
-95: 4104C1EF:38AA 00000000:0000 07 00000000:00000000 00:00000000 00000000   512        0 239994712 2 ffff8808507ed800 0     
-95: BC04C1EF:38AA 00000000:0000 07 00000000:00000000 00:00000000 00000000   512        0 175113818 2 ffff881054a8b080 0     
-95: BE04C1EF:38AA 00000000:0000 07 00000000:00000000 00:00000000 00000000   512        0 175113817 2 ffff881054a8b440 0     
+47: 00000000:B87A 00000000:0000 07 00000000:00000000 ...   512        0 239982339 2 ffff88052885c440 0     
+95: 4104C1EF:38AA 00000000:0000 07 00000000:00000000 ...   512        0 239994712 2 ffff8808507ed800 0     
+95: BC04C1EF:38AA 00000000:0000 07 00000000:00000000 ...   512        0 175113818 2 ffff881054a8b080 0     
+95: BE04C1EF:38AA 00000000:0000 07 00000000:00000000 ...   512        0 175113817 2 ffff881054a8b440 0     
 ...</code></pre>
 <p>For observing back-pressure, we are interested in the drops column, and the rx_queue column, which is a snapshot of the amount of queued data at the time of reading. Local and remote addresses are hex-encoded <code>ip:port</code> addresses.</p>
 <p>Monitoring this file can tell us if our application is falling behind the packet arrival rate (increase in <code>rx_queue</code>), or whether the kernel was unable to copy a packet into the socket buffer due to it already being full (increase in <code>drops</code>).</p>
 <h2 id="tracepoints">Tracepoints</h2>
-<p><code>/proc/net/udp</code>: http://lxr.free-electrons.com/source/net/ipv4/udp.c#L2538</p>
-<p><code>/proc/net/snmp</code>: http://lxr.free-electrons.com/source/net/ipv4/proc.c?v=4.0#L176</p>
-<p>Diff between InErrors and RevbufErrors:</p>
-<p>Udp: InDatagrams NoPorts InErrors OutDatagrams RcvbufErrors SndbufErrors InCsumErrors Udp: 275707389845 4 261757187 41217478199 261757187 0 0</p>
-<p>InErrors &gt; RcvbufErrors -&gt; allocation failure when cloning skb.http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1626</p>
+<p>If we wish to capture more data about packets that are being dropped, there a three tracepoints that are of interest.</p>
+<ol style="list-style-type: decimal">
+<li><a href="http://lxr.free-electrons.com/source/net/core/sock.c?v=4.0#L447"><code>sock:sock_rcvqueue_full</code></a>: called when the amount of memory already allocated to the socket buffer is greater than or equal to the configured socket buffer size.</li>
+<li><a href="http://lxr.free-electrons.com/source/net/core/sock.c?v=4.0#L2084"><code>sock:sock_exceed_buf_limit</code></a>: called when the kernel is unable to allocate more memory for the socket buffer.</li>
+<li><a href="http://lxr.free-electrons.com/source/net/ipv4/udp.c?v=4.0#L1473"><code>udp:udp_fail_queue_rcv_skb</code></a>: called shortly after the <code>sock_rcvqueue_full</code> event trace for the same reason.</li>
+</ol>
+<p>These events can be captured using Linux kernel tracing tools such as <a href="https://perf.wiki.kernel.org/index.php/Main_Page"><code>perf</code></a> or <a href="https://www.kernel.org/doc/Documentation/trace/ftrace.txt"><code>ftrace</code></a>.</p>
 <p>TODO: how does /sys/class/net/p3p1/statistics/rx_dropped get populated by the kernel? TODO: double-check the code that updates device-side drops/rx-ring overflow.</p>
