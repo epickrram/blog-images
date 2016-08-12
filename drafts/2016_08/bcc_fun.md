@@ -35,17 +35,17 @@ on our dedicated core:
 
 
     runnable tasks:
-                task   PID         tree-key  switches  prio     wait-time             sum-exec        sum-sleep
-    ----------------------------------------------------------------------------------------------------------
-            cpuhp/35   334         0.943766        14   120         0.000000         4.365325         0.000000 1 0 /
-        migration/35   336         0.000000        26     0         0.000000       185.499061         0.000000 1 0 /
-        ksoftirqd/35   337        -5.236392         6   120         0.000000         0.010490         0.000000 1 0 /
-        kworker/35:0   338 139152554.767297       456   120         0.000000         9.883127         0.000000 1 0 /
-       kworker/35:0H   339        -5.241396        12   100         0.000000         0.045604         0.000000 1 0 /
-        kworker/35:1   530 139227632.577336       902   120         0.000000        18.416365         0.000000 1 0 /
-       kworker/35:1H  7190         6.745434         3   100         0.000000         0.013923         0.000000 1 0 /
-    R           java 102825   1306133.326251       479   110         0.000000     38881.247855         0.000000 1 0 /autogroup-30
-        kworker/35:2 102845 139065252.390586         2   120         0.000000         0.003843         0.000000 1 0 /
+                task   PID         tree-key  switches  prio  ... 
+    ---------------------------------------------------------
+            cpuhp/35   334         0.943766        14   120 
+        migration/35   336         0.000000        26     0  
+        ksoftirqd/35   337        -5.236392         6   120   
+        kworker/35:0   338 139152554.767297       456   120  
+       kworker/35:0H   339        -5.241396        12   100   
+        kworker/35:1   530 139227632.577336       902   120  
+       kworker/35:1H  7190         6.745434         3   100   
+    R           java 102825   1306133.326251       479   110  
+        kworker/35:2 102845 139065252.390586         2   120  
 
 We know that our Java process will sometimes be kicked off the CPU by one of the `kworker` threads, so that it can do some house-keeping.
 In order to find out if there is a correlation between network traffic build-up and the java process being off-cpu, we have traditionally
@@ -59,9 +59,9 @@ switched out, and the process that is about to be scheduled for execution.
 
 The output from `ftrace` will show these data, along with a microsecond timestamp:
 
-              <idle>-0     [020] 6907585.873080: sched_switch:         0:120:R ==> 33233:110: java
-               <...>-33233 [020] 6907585.873083: sched_switch:         33233:110:S ==> 0:120: swapper/20
-              <idle>-0     [020] 6907585.873234: sched_switch:         0:120:R ==> 33233:110: java
+    <idle>-0     [020] 6907585.873080: sched_switch: 0:120:R ==> 33233:110: java
+    <...>-33233  [020] 6907585.873083: sched_switch: 33233:110:S ==> 0:120: swapper/20
+    <idle>-0     [020] 6907585.873234: sched_switch: 0:120:R ==> 33233:110: java
 
 The excerpt above tells us that on CPU 20, the idle process (pid 0) was runnable (R) and was switched out in favour of a Java process (pid 33233).
 Three microseconds later, the Java process entered the sleep state (S), and was switched out in favour of the idle process. After another 150 microseconds 
@@ -189,7 +189,8 @@ while 1:
     for k,v in b["max_offcpu"].iteritems():
         if v != 0:
             proc_name = b["proc_name"][k].comm
-            print("%s max offcpu for %s is %dus" % (datetime.datetime.now(), proc_name, v.value/1000))
+            print("%s max offcpu for %s is %dus" % 
+                (datetime.datetime.now(), proc_name, v.value/1000))
     b["max_offcpu"].clear()
 ```
 
@@ -285,7 +286,7 @@ user-space code to be instrumented. Some programs also contain user-defined stat
 static tracepoints.
 
 Familiarity with the functions and tracepoints within the kernel is a definite bonus, as it helps us to understand what information is
-available. My first port of call is usually running `perf` while capturing stack-traces to get an idea of what a program is actually
+available. My first port of call is usually running `perf record` while capturing stack-traces to get an idea of what a program is actually
 doing. After that, it's possible to start looking through the kernel source code looking for useful data to collect.
 
 The scripts referenced in this post are [available on github](https://github.com/epickrram/tracing/tree/master/scheduler).
