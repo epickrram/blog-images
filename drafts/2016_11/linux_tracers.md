@@ -2,6 +2,100 @@
 
 Here we will take a tour through the code and configuration involved in using Linux tracing tools such as `ftrace`, `perf`, `eBPF` and `system-tap`.
 
+## Finding out what we don't know
+
+My first attempt at understanding how a tracing tool such as `perf` works was to dig into the kernel documentation
+and source and try to figure things out from the bottom up. 
+
+While this would have been a worthy exercise, it struck me, as I waded through pages of C, that I could use another
+tracing tool to help figure out what `perf` was doing: `strace`.
+
+Running a simple `perf` command under `strace` will show the system calls being made by the `perf` program:
+
+```
+strace perf record -e major-faults -ag 2>&1 | head -n 10000 | less
+```
+
+Somewhere towards the bottom of this file can be seen the following:
+
+```
+perf_event_open(0xd6b590, -1, 0, -1, 0x8 /* PERF_FLAG_??? */) = 3
+perf_event_open(0xd6b590, -1, 1, -1, 0x8 /* PERF_FLAG_??? */) = 4
+perf_event_open(0xd6b590, -1, 2, -1, 0x8 /* PERF_FLAG_??? */) = 5
+...
+perf_event_open(0xd6b590, -1, 26, -1, 0x8 /* PERF_FLAG_??? */) = 29
+perf_event_open(0xd6b590, -1, 27, -1, 0x8 /* PERF_FLAG_??? */) = 30
+...
+mmap(NULL, 528384, PROT_READ|PROT_WRITE, MAP_SHARED, 3, 0) = 0x7f8247356000
+fcntl(3, F_SETFL, O_RDONLY|O_NONBLOCK)  = 0
+
+```
+
+I am running this on a 28-CPU machine, so it looks suspiciously like `perf` is calling `perf_event_open` for each CPU in the system.
+
+Sure enough `man perf_event_open` yields the following snippet:
+
+```
+DESCRIPTION
+       Given  a  list  of parameters, perf_event_open() returns a file descriptor, 
+       for use in subsequent system calls (read(2), mmap(2), prctl(2),
+       fcntl(2), etc.).
+
+       A call to perf_event_open() creates a file descriptor that allows measuring 
+       performance information.
+```
+
+The first argument to `perf_event_open()` is a struct of type 
+[`perf_event_attr`](http://lxr.free-electrons.com/source/include/uapi/linux/perf_event.h?v=4.8#L283)
+that describes what is to be observed.
+
+We don't have visibility of the data stored at the memory address `0xd6b590`, but we can make an educated guess.
+Since we are running `perf` asking it to trace the 'major-faults' event, we can dig around in the source code to 
+deduce what will happen in `perf_event_open()`.
+
+The 'major-faults' event is mapped to the type 
+[`PERF_COUNT_SW_PAGE_FAULTS_MAJ`](http://lxr.free-electrons.com/source/include/uapi/linux/perf_event.h?v=4.8#L109), 
+which is passed on a page-fault to the `perf_sw_event()` function from 
+[`fault.c`](http://lxr.free-electrons.com/source/arch/x86/mm/fault.c#L1394)
+for each architecture.
+
+After a few levels of indirection and some error-checking, execution will end up in the
+[`perf_swevent_event()`](http://lxr.free-electrons.com/source/kernel/events/core.c?v=4.8#L7140) function:
+
+
+```
+static void perf_swevent_event(struct perf_event *event, u64 nr,
+                   struct perf_sample_data *data,
+                   struct pt_regs *regs)
+{
+    struct hw_perf_event *hwc = &event->hw;
+
+    local64_add(nr, &event->count);
+
+    if (!regs)
+        return;
+
+    if (!is_sampling_event(event))
+        return;
+
+    if ((event->attr.sample_type & PERF_SAMPLE_PERIOD) && !event->attr.freq) {
+        data->period = nr;
+        return perf_swevent_overflow(event, 1, data, regs);
+    } else
+        data->period = event->hw.last_period;
+
+    if (nr == 1 && hwc->sample_period == 1 && !event->attr.freq)
+        return perf_swevent_overflow(event, 1, data, regs);
+
+    if (local64_add_negative(nr, &hwc->period_left))
+        return;
+
+    perf_swevent_overflow(event, 0, data, regs);
+}
+```
+
+/home/pricem/dev/linux-4.8/tools/perf/tests/attr/README
+
 ## Hardware debug registers
 
 Tracers and debuggers rely on a feature of the CPU called a debug register.
@@ -45,6 +139,14 @@ ffffffff810cf370 t finish_task_switch
 https://onebitbug.me/2011/03/04/introducing-linux-kernel-symbols/
 
 http://events.linuxfoundation.org/sites/events/files/lcjp13_takata.pdf
+
+http://www.cs.columbia.edu/~nahum/w6998/papers/ols2009-breakpoint.pdf
+
+
+user tracing: ptrace
+
+Documentation/kprobes.txt
+
 
 ```
 [root@localhost ~]# perf probe -F -x /home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so | grep -v "::"
