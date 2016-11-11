@@ -94,6 +94,10 @@ static void perf_swevent_event(struct perf_event *event, u64 nr,
 }
 ```
 
+Now, before falling down the rabbit-hole of function-chasing, it's fair to assume that at some point, we will 
+call `perf_swevent_overflow()`, which will eventually call the event's handler_function and write an entry
+into the per-cpu data file.
+
 /home/pricem/dev/linux-4.8/tools/perf/tests/attr/README
 
 ## Hardware debug registers
