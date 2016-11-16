@@ -54,14 +54,21 @@ but we can make an educated guess.
 Since we are running `perf` asking it to trace the 'major-faults' event, we can dig around in the source code to 
 deduce what will happen in `perf_event_open()`.
 
+
+Using `perf` as an example starting point, we can now start taking a look at the different event types that 
+are emitted from the kernel.
+
 ## Software events
 
 
-The 'major-faults' event is mapped to the type 
-[`PERF_COUNT_SW_PAGE_FAULTS_MAJ`](http://lxr.free-electrons.com/source/include/uapi/linux/perf_event.h?v=4.8#L109), 
-which is passed on a page-fault to the `perf_sw_event()` function from 
-[`fault.c`](http://lxr.free-electrons.com/source/arch/x86/mm/fault.c#L1394)
-for each hardware architecture.
+The 'major-faults' event (used in the example `perf` command above) is mapped to the type 
+[`PERF_COUNT_SW_PAGE_FAULTS_MAJ`](http://lxr.free-electrons.com/source/include/uapi/linux/perf_event.h?v=4.8#L109).
+
+Having a look through the source code, we can see that this event type is used when a major fault is
+encountered in the architecture-specific  
+[`fault.c`](http://lxr.free-electrons.com/source/arch/x86/mm/fault.c#L1394).
+
+The handler code invokes the `perf_sw_event()` function.
 
 After a few levels of indirection and some error-checking, execution will end up in the
 [`perf_swevent_event()`](http://lxr.free-electrons.com/source/kernel/events/core.c?v=4.8#L7140) function:
@@ -174,8 +181,14 @@ void perf_tp_event(u16 event_type, u64 count, void *record, int entry_size,
 	}
 ```
 
-As we have seen previously, this event will now be written to the `perf` ring-buffer, to be captured in user-space.
+As we have seen earlier, this event will now be written to the `perf` ring-buffer, to be captured in user-space.
 
+
+
+
+
+kprobe/uprobe:
+http://lxr.free-electrons.com/ident?i=perf_trace_buf_submit
 
 
 /home/pricem/dev/linux-4.8/tools/perf/tests/attr/README
