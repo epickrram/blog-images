@@ -185,6 +185,153 @@ As we have seen earlier, this event will now be written to the `perf` ring-buffe
 
 
 
+## Kernel probes (kprobes)
+
+When the statically-defined event types are not enough, and we want to capture arbitrary function calls in the kernel,
+we can fall back to using `kprobes`.
+
+For background, you can read the kernel's documentation on this feature: 
+[kprobes.txt](http://lxr.free-electrons.com/source/Documentation/kprobes.txt?v=4.8).
+
+In short, we can use the kprobe mechanism to snoop on certain kernel functions dynamically.
+
+Let's take another look at the scheduler code, and find a function to observe:
+
+```
+/**
+ * finish_task_switch - clean up after a task-switch
+ * @prev: the thread we just switched away from.
+ *
+...
+ */
+static struct rq *finish_task_switch(struct task_struct *prev)
+{
+```
+
+Now we need to make sure that we can hook into its call-site:
+
+
+```
+
+[root@localhost ~]# perf probe --funcs | grep finish_task_switch
+finish_task_switch
+
+```
+
+This looks pretty likely, so we can now use `perf` to instrument the function and print some data:
+
+```
+[root@localhost ~]# perf probe --add finish_task_switch
+Added new event:
+  probe:finish_task_switch (on finish_task_switch)
+
+```
+
+Our new probe point is now listed as available by `perf list`, and we can intercept calls to it using the standard `perf` commands:
+
+```
+[root@localhost ~]# perf list | grep finish_task_switch
+  probe:finish_task_switch                           [Tracepoint event]
+
+[root@localhost ~]# perf record -e probe:finish_task_switch -g -a
+^C[ perf record: Woken up 1 times to write data ]
+[ perf record: Captured and wrote 1.718 MB perf.data (2649 samples) ]
+
+[root@localhost ~]# perf script | head
+swapper     0 [005] 27509.843061: probe:finish_task_switch: (ffffffff810cf370)
+	    7fff810d2371 finish_task_switch+0x80007f003001 ([kernel.kallsyms])
+	    7fff817dfef5 schedule+0x80007f003035 ([kernel.kallsyms])
+	    7fff817e01be schedule_preempt_disabled+0x80007f00300e ([kernel.kallsyms])
+	    7fff810ee4d1 cpu_startup_entry+0x80007f0031a1 ([kernel.kallsyms])
+	    7fff81054c61 start_secondary+0x80007f003161 ([kernel.kallsyms])
+
+
+```
+
+Using kprobe syntax, it is also possible to record variable and parameter values. More information on this is 
+available in the `man` page for `perf-probe`.
+
+
+## User probes (uprobes)
+
+A similar mechanism to `kprobes` exist for instrumenting user code. They are called `uprobes`, and we can also use the 
+`perf` program to interact with them. More background can be found in the 
+[documentation](http://lxr.free-electrons.com/source/Documentation/trace/uprobetracer.txt?v=4.8).
+
+Let's have a look at an example of instrumenting a user program; in this case the JVM.
+
+We will use `perf probe` to look for probe points in `libjvm.so`:
+
+```
+[root@localhost ~]# perf probe --funcs -x /home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so | wc -l
+33468
+
+```
+
+Over 30 thousand possible probe points exist; let's use one we know will be triggered:
+
+```
+[root@localhost ~]# perf probe --funcs -x /home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so |grep vm_exit
+JavaThread::block_if_vm_exited
+VM_Exit::set_vm_exited
+VM_Exit::wait_if_vm_exited
+vm_exit
+vm_exit_during_initialization
+vm_exit_during_initialization
+vm_exit_during_initialization
+
+[root@localhost ~]# perf probe -x /home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so --add vm_exit
+Added new event:
+  probe_libjvm:vm_exit (on vm_exit in /home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+
+[root@localhost ~]# perf list | grep vm_exit
+  probe_libjvm:vm_exit                               [Tracepoint event]
+
+[root@localhost ~]# cat /sys/kernel/debug/tracing/uprobe_events 
+p:probe_libjvm/vm_exit /home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so:0x0000000000688b10
+
+
+```
+
+Now we can record events using the familiar `perf` command:
+
+```
+[root@localhost ~]# perf record -e probe_libjvm:vm_exit -g -a
+
+# - execute java in another terminal
+
+^C[ perf record: Woken up 1 times to write data ]
+[ perf record: Captured and wrote 1.398 MB perf.data (3 samples) ]
+
+
+[root@localhost ~]# perf script
+java 14200 [004] 30011.362953: probe_libjvm:vm_exit: (7fdc531bcb10)
+                  688b10 vm_exit+0xffff00475a998000 (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+...
+                  68bbe6 JavaCalls::call_helper+0xffff00475a999056 (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                  68c0f1 JavaCalls::call_virtual+0xffff00475a998321 (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                  68c597 JavaCalls::call_virtual+0xffff00475a998047 (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                  7232d0 thread_entry+0xffff00475a9980a0 (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                  a68f3f JavaThread::thread_main_inner+0xffff00475a9980df (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                  a6906c JavaThread::run+0xffff00475a99811c (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                  91cb88 java_start+0xffff00475a998108 (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                    75ca start_thread+0xffff004757a2c0ca (/usr/lib64/libpthread-2.23.so)
+
+
+```
+
+## Instrumentation mechanism
+
+
+
+## Recap
+
+Let's just go over what we've seen so far:
+
+   * The linux kernel has 3 built-in event types: hardware events, software events and tracepoints
+   * Tracing tools such as `perf` can intercept and record these events as they occur
+   * We can dynamically instrument kernel (via kprobes) and user (via uprobes) code
+   * Arbitrary event handler code can be attached to these tap points
 
 
 kprobe/uprobe:
@@ -194,6 +341,9 @@ http://lxr.free-electrons.com/ident?i=perf_trace_buf_submit
 /home/pricem/dev/linux-4.8/tools/perf/tests/attr/README
 tools/include/uapi/linux/perf_event.h:
 
+userspace:
+
+--call-graph = dwarf
 
 
 ## Hardware debug registers

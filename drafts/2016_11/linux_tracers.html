@@ -101,8 +101,103 @@ fcntl(3, F_SETFL, O_RDONLY|O_NONBLOCK)  = 0
         if (perf_tp_event_match(event, &amp;data, regs))
             perf_swevent_event(event, count, &amp;data, regs); // record as a software event
     }</code></pre>
-<p>As we have seen previously, this event will now be written to the <code>perf</code> ring-buffer, to be captured in user-space.</p>
+<p>As we have seen earlier, this event will now be written to the <code>perf</code> ring-buffer, to be captured in user-space.</p>
+<h2 id="kernel-probes-kprobes">Kernel probes (kprobes)</h2>
+<p>When the statically-defined event types are not enough, and we want to capture arbitrary function calls in the kernel, we can fall back to using <code>kprobes</code>.</p>
+<p>For background, you can read the kernel's documentation on this feature: <a href="http://lxr.free-electrons.com/source/Documentation/kprobes.txt?v=4.8">kprobes.txt</a>.</p>
+<p>In short, we can use the kprobe mechanism to snoop on certain kernel functions dynamically.</p>
+<p>Let's take another look at the scheduler code, and find a function to observe:</p>
+<pre><code>/**
+ * finish_task_switch - clean up after a task-switch
+ * @prev: the thread we just switched away from.
+ *
+...
+ */
+static struct rq *finish_task_switch(struct task_struct *prev)
+{</code></pre>
+<p>Now we need to make sure that we can hook into its call-site:</p>
+<pre><code>
+[root@localhost ~]# perf probe --funcs | grep finish_task_switch
+finish_task_switch
+</code></pre>
+<p>This looks pretty likely, so we can now use <code>perf</code> to instrument the function and print some data:</p>
+<pre><code>[root@localhost ~]# perf probe --add finish_task_switch
+Added new event:
+  probe:finish_task_switch (on finish_task_switch)
+</code></pre>
+<p>Our new probe point is now listed as available by <code>perf list</code>, and we can intercept calls to it using the standard <code>perf</code> commands:</p>
+<pre><code>[root@localhost ~]# perf list | grep finish_task_switch
+  probe:finish_task_switch                           [Tracepoint event]
+
+[root@localhost ~]# perf record -e probe:finish_task_switch -g -a
+^C[ perf record: Woken up 1 times to write data ]
+[ perf record: Captured and wrote 1.718 MB perf.data (2649 samples) ]
+
+[root@localhost ~]# perf script | head
+swapper     0 [005] 27509.843061: probe:finish_task_switch: (ffffffff810cf370)
+        7fff810d2371 finish_task_switch+0x80007f003001 ([kernel.kallsyms])
+        7fff817dfef5 schedule+0x80007f003035 ([kernel.kallsyms])
+        7fff817e01be schedule_preempt_disabled+0x80007f00300e ([kernel.kallsyms])
+        7fff810ee4d1 cpu_startup_entry+0x80007f0031a1 ([kernel.kallsyms])
+        7fff81054c61 start_secondary+0x80007f003161 ([kernel.kallsyms])
+
+</code></pre>
+<p>Using kprobe syntax, it is also possible to record variable and parameter values. More information on this is available in the <code>man</code> page for <code>perf-probe</code>.</p>
+<h2 id="user-probes-uprobes">User probes (uprobes)</h2>
+<p>A similar mechanism to <code>kprobes</code> exist for instrumenting user code. They are called <code>uprobes</code>, and we can also use the <code>perf</code> program to interact with them. More background can be found in the <a href="http://lxr.free-electrons.com/source/Documentation/trace/uprobetracer.txt?v=4.8">documentation</a>.</p>
+<p>Let's have a look at an example of instrumenting a user program; in this case the JVM.</p>
+<p>We will use <code>perf probe</code> to look for probe points in <code>libjvm.so</code>:</p>
+<pre><code>[root@localhost ~]# perf probe --funcs -x /home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so | wc -l
+33468
+</code></pre>
+<p>Over 30 thousand possible probe points exist; let's use one we know will be triggered:</p>
+<pre><code>[root@localhost ~]# perf probe --funcs -x /home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so |grep vm_exit
+JavaThread::block_if_vm_exited
+VM_Exit::set_vm_exited
+VM_Exit::wait_if_vm_exited
+vm_exit
+vm_exit_during_initialization
+vm_exit_during_initialization
+vm_exit_during_initialization
+
+[root@localhost ~]# perf probe -x /home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so --add vm_exit
+Added new event:
+  probe_libjvm:vm_exit (on vm_exit in /home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+
+[root@localhost ~]# perf list | grep vm_exit
+  probe_libjvm:vm_exit                               [Tracepoint event]
+
+[root@localhost ~]# cat /sys/kernel/debug/tracing/uprobe_events 
+p:probe_libjvm/vm_exit /home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so:0x0000000000688b10
+
+</code></pre>
+<p>Now we can record events using the familiar <code>perf</code> command:</p>
+<pre><code>[root@localhost ~]# perf record -e probe_libjvm:vm_exit -g -a
+
+# - execute java in another terminal
+
+^C[ perf record: Woken up 1 times to write data ]
+[ perf record: Captured and wrote 1.398 MB perf.data (3 samples) ]
+
+
+[root@localhost ~]# perf script
+java 14200 [004] 30011.362953: probe_libjvm:vm_exit: (7fdc531bcb10)
+                  688b10 vm_exit+0xffff00475a998000 (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+...
+                  68bbe6 JavaCalls::call_helper+0xffff00475a999056 (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                  68c0f1 JavaCalls::call_virtual+0xffff00475a998321 (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                  68c597 JavaCalls::call_virtual+0xffff00475a998047 (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                  7232d0 thread_entry+0xffff00475a9980a0 (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                  a68f3f JavaThread::thread_main_inner+0xffff00475a9980df (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                  a6906c JavaThread::run+0xffff00475a99811c (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                  91cb88 java_start+0xffff00475a998108 (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                    75ca start_thread+0xffff004757a2c0ca (/usr/lib64/libpthread-2.23.so)
+
+</code></pre>
+<p>kprobe/uprobe: http://lxr.free-electrons.com/ident?i=perf_trace_buf_submit</p>
 <p>/home/pricem/dev/linux-4.8/tools/perf/tests/attr/README tools/include/uapi/linux/perf_event.h:</p>
+<p>userspace:</p>
+<p>--call-graph = dwarf</p>
 <h2 id="hardware-debug-registers">Hardware debug registers</h2>
 <p>Tracers and debuggers rely on a feature of the CPU called a debug register.</p>
 <p>These registers are used to specify a memory address that can trigger an interrupt on the CPU. On some architectures, debug registers can be used to specify what kind of memory access will trigger an interrupt (i.e. read/write/execute). The Wikipedia entry on <a href="https://en.wikipedia.org/wiki/X86_debug_register#DR7_-_Debug_control">x86 debug registers</a> goes into some detail of how these options are encoded.</p>
