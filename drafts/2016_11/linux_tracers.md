@@ -322,6 +322,20 @@ java 14200 [004] 30011.362953: probe_libjvm:vm_exit: (7fdc531bcb10)
 
 ## Instrumentation mechanism
 
+For more detail on how dynamic probing works, refer to the 
+[documentation](http://lxr.free-electrons.com/source/Documentation/kprobes.txt?v=4.8#L56).
+
+In summary, dynamic probes work by:
+
+   * Modifying the code loaded into memory and overwriting the first byte of the instrumented instruction with a breakpoint instruction
+   * Trapping the resulting interrupt when the instruction is next executed, and redirecting execution to the tracing handler function
+   * Once the handler function is complete, execution is returned the original function
+
+Since hitting the breakpoint instruction raises an interrupt, and interrupts are costly, the `kprobe` mechanism comes with an 
+optimisation step.
+
+Certain functions can be optimised if certain conditions hold true, and in this case, when the breakpoint instruction is first 
+encountered, it will be replaced with a jump instruction, which will redirect execution straigh to the tracing handler function.
 
 
 ## Recap
