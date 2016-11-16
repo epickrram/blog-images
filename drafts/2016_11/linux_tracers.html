@@ -60,6 +60,19 @@ fcntl(3, F_SETFL, O_RDONLY|O_NONBLOCK)  = 0
 }</code></pre>
 <p>Now, before falling down the rabbit-hole of function-chasing, it's fair to assume that at some point, we will call <a href="http://lxr.free-electrons.com/source/kernel/events/core.c?v=4.8#L7114"><code>perf_swevent_overflow()</code></a>, which will eventually call the event's <a href="http://lxr.free-electrons.com/source/kernel/events/core.c?v=4.8#L7052"><code>overflow_handler</code></a> function.</p>
 <p>In the case of a software event, this resolves to <a href="http://lxr.free-electrons.com/source/kernel/events/ring_buffer.c?v=4.8#L117"><code>__perf_output_begin()</code></a>, which writes an entry to <code>perf</code>'s ring_buffer so that the data can be read by the user-space side of <code>perf</code>.</p>
+<h2 id="hardware-events">Hardware events</h2>
+<p><code>perf</code> also allows to spy on hardware events (cache-misses, bus-cycles, etc). These are architecture specific and each event type will generally map to a <a href="https://en.wikipedia.org/wiki/Model-specific_register"><code>MSR</code></a>.</p>
+<p>Making a wild guess, when we try to record a hardware event, <code>perf</code> will use timers or workqueues to sample the hardware register at the desired frequency, and write the retrieved value into the ring-buffer for capture in user-space.</p>
+<h2 id="tracepoint-events">Tracepoint events</h2>
+<p>The third type of instrumentation readily available is provided by in-kernel tracepoints.</p>
+<p>One of the tracepoints reported by <code>perf list</code> is <code>sched:sched_switch</code>. The tracepoint is defined in the <a href="http://lxr.free-electrons.com/source/include/trace/events/sched.h?v=4.8#L124">scheduler events file</a>, and invoked from the <a href="http://lxr.free-electrons.com/source/kernel/sched/core.c?v=4.8#L3397"><code>__schedule()</code></a> method of the scheduler:</p>
+<pre><code>         if (likely(prev != next)) {
+                 rq-&gt;nr_switches++;
+                 rq-&gt;curr = next;
+                 ++*switch_count;
+ 
+                 trace_sched_switch(preempt, prev, next);
+                 rq = context_switch(rq, prev, next, cookie);</code></pre>
 <p>/home/pricem/dev/linux-4.8/tools/perf/tests/attr/README tools/include/uapi/linux/perf_event.h:</p>
 <h2 id="hardware-debug-registers">Hardware debug registers</h2>
 <p>Tracers and debuggers rely on a feature of the CPU called a debug register.</p>

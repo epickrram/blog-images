@@ -112,6 +112,69 @@ to `perf`'s ring_buffer so that the data can be read by the user-space side of `
 
 ## Hardware events
 
+`perf` also allows us to spy on hardware events (cache-misses, bus-cycles, etc). These are architecture specific and each event type
+will generally map to a [`MSR`](https://en.wikipedia.org/wiki/Model-specific_register).
+
+Making a wild guess, when we try to record a hardware event, `perf` will use timers or workqueues to sample the hardware register
+at the desired frequency, and write the retrieved value into the ring-buffer for capture in user-space.
+
+
+## Tracepoint events
+
+The third type of instrumentation readily available is provided by in-kernel tracepoints.
+
+One of the tracepoints reported by `perf list` is `sched:sched_switch`. The tracepoint is defined in the 
+[scheduler events file](http://lxr.free-electrons.com/source/include/trace/events/sched.h?v=4.8#L124), and invoked
+from the [`__schedule()`](http://lxr.free-electrons.com/source/kernel/sched/core.c?v=4.8#L3397) method of the scheduler:
+
+```
+         if (likely(prev != next)) {
+                 rq->nr_switches++;
+                 rq->curr = next;
+                 ++*switch_count;
+ 
+                 trace_sched_switch(preempt, prev, next);
+                 rq = context_switch(rq, prev, next, cookie);
+```
+
+The content of the trace function will be expanded from a common macro, and will end up calling
+[`perf_trace_run_bpf_submit`](http://lxr.free-electrons.com/source/kernel/events/core.c?v4.8#L7547) 
+with the event-specific payload. 
+
+At this point, the kernel will run any `BPF` program associated with the tracepoint:
+
+```
+	if (prog) {
+		*(struct pt_regs **)raw_data = regs;
+		if (!trace_call_bpf(prog, raw_data) || hlist_empty(head)) {
+			perf_swevent_put_recursion_context(rctx);
+			return;
+		}
+	}
+```
+
+finally forwarding the event to the `perf_tp_event()` function.
+
+At this point, our previous reading comes in handy, since the tracepoint event is recorded as a software event:
+
+
+```
+void perf_tp_event(u16 event_type, u64 count, void *record, int entry_size,
+		   struct pt_regs *regs, struct hlist_head *head, int rctx,
+		   struct task_struct *task)
+{
+	struct perf_sample_data data;
+	struct perf_event *event;
+
+...
+
+	hlist_for_each_entry_rcu(event, head, hlist_entry) {
+		if (perf_tp_event_match(event, &data, regs))
+			perf_swevent_event(event, count, &data, regs); // record as a software event
+	}
+```
+
+As we have seen previously, this event will now be written to the `perf` ring-buffer, to be captured in user-space.
 
 
 
