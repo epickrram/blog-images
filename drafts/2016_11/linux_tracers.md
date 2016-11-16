@@ -49,15 +49,19 @@ The first argument to `perf_event_open()` is a struct of type
 [`perf_event_attr`](http://lxr.free-electrons.com/source/include/uapi/linux/perf_event.h?v=4.8#L283)
 that describes what is to be observed.
 
-We don't have visibility of the data stored at the memory address `0xd6b590`, but we can make an educated guess.
+We don't have visibility of the data stored at the memory address `0xd6b590` (from the `strace` output), 
+but we can make an educated guess.
 Since we are running `perf` asking it to trace the 'major-faults' event, we can dig around in the source code to 
 deduce what will happen in `perf_event_open()`.
+
+## Software events
+
 
 The 'major-faults' event is mapped to the type 
 [`PERF_COUNT_SW_PAGE_FAULTS_MAJ`](http://lxr.free-electrons.com/source/include/uapi/linux/perf_event.h?v=4.8#L109), 
 which is passed on a page-fault to the `perf_sw_event()` function from 
 [`fault.c`](http://lxr.free-electrons.com/source/arch/x86/mm/fault.c#L1394)
-for each architecture.
+for each hardware architecture.
 
 After a few levels of indirection and some error-checking, execution will end up in the
 [`perf_swevent_event()`](http://lxr.free-electrons.com/source/kernel/events/core.c?v=4.8#L7140) function:
@@ -95,8 +99,21 @@ static void perf_swevent_event(struct perf_event *event, u64 nr,
 ```
 
 Now, before falling down the rabbit-hole of function-chasing, it's fair to assume that at some point, we will 
-call `perf_swevent_overflow()`, which will eventually call the event's handler_function and write an entry
-into the per-cpu data file.
+call 
+[`perf_swevent_overflow()`](http://lxr.free-electrons.com/source/kernel/events/core.c?v=4.8#L7114), 
+which will eventually call the event's 
+[`overflow_handler`](http://lxr.free-electrons.com/source/kernel/events/core.c?v=4.8#L7052)
+function.
+
+In the case of a software event, this resolves to 
+[`__perf_output_begin()`](http://lxr.free-electrons.com/source/kernel/events/ring_buffer.c?v=4.8#L117), which writes an entry
+to `perf`'s ring_buffer so that the data can be read by the user-space side of `perf`.
+
+
+## Hardware events
+
+
+
 
 /home/pricem/dev/linux-4.8/tools/perf/tests/attr/README
 tools/include/uapi/linux/perf_event.h:

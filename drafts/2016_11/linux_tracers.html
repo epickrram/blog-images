@@ -1,0 +1,116 @@
+<h1 id="linux-tracer-notes">Linux Tracer notes</h1>
+<p>Here we will take a tour through the code and configuration involved in using Linux tracing tools such as <code>ftrace</code>, <code>perf</code>, <code>eBPF</code> and <code>system-tap</code>.</p>
+<h2 id="finding-out-what-we-dont-know">Finding out what we don't know</h2>
+<p>My first attempt at understanding how a tracing tool such as <code>perf</code> works was to dig into the kernel documentation and source and try to figure things out from the bottom up.</p>
+<p>While this would have been a worthy exercise, it struck me, as I waded through pages of C, that I could use another tracing tool to help figure out what <code>perf</code> was doing: <code>strace</code>.</p>
+<p>Running a simple <code>perf</code> command under <code>strace</code> will show the system calls being made by the <code>perf</code> program:</p>
+<pre><code>strace perf record -e major-faults -ag 2&gt;&amp;1 | head -n 10000 | less</code></pre>
+<p>Somewhere towards the bottom of this file can be seen the following:</p>
+<pre><code>perf_event_open(0xd6b590, -1, 0, -1, 0x8 /* PERF_FLAG_??? */) = 3
+perf_event_open(0xd6b590, -1, 1, -1, 0x8 /* PERF_FLAG_??? */) = 4
+perf_event_open(0xd6b590, -1, 2, -1, 0x8 /* PERF_FLAG_??? */) = 5
+...
+perf_event_open(0xd6b590, -1, 26, -1, 0x8 /* PERF_FLAG_??? */) = 29
+perf_event_open(0xd6b590, -1, 27, -1, 0x8 /* PERF_FLAG_??? */) = 30
+...
+mmap(NULL, 528384, PROT_READ|PROT_WRITE, MAP_SHARED, 3, 0) = 0x7f8247356000
+fcntl(3, F_SETFL, O_RDONLY|O_NONBLOCK)  = 0
+</code></pre>
+<p>I am running this on a 28-CPU machine, so it looks suspiciously like <code>perf</code> is calling <code>perf_event_open</code> for each CPU in the system.</p>
+<p>Sure enough <code>man perf_event_open</code> yields the following snippet:</p>
+<pre><code>DESCRIPTION
+       Given  a  list  of parameters, perf_event_open() returns a file descriptor, 
+       for use in subsequent system calls (read(2), mmap(2), prctl(2),
+       fcntl(2), etc.).
+
+       A call to perf_event_open() creates a file descriptor that allows measuring 
+       performance information.</code></pre>
+<p>The first argument to <code>perf_event_open()</code> is a struct of type <a href="http://lxr.free-electrons.com/source/include/uapi/linux/perf_event.h?v=4.8#L283"><code>perf_event_attr</code></a> that describes what is to be observed.</p>
+<p>We don't have visibility of the data stored at the memory address <code>0xd6b590</code> (from the <code>strace</code> output), but we can make an educated guess. Since we are running <code>perf</code> asking it to trace the 'major-faults' event, we can dig around in the source code to deduce what will happen in <code>perf_event_open()</code>.</p>
+<h2 id="software-events">Software events</h2>
+<p>The 'major-faults' event is mapped to the type <a href="http://lxr.free-electrons.com/source/include/uapi/linux/perf_event.h?v=4.8#L109"><code>PERF_COUNT_SW_PAGE_FAULTS_MAJ</code></a>, which is passed on a page-fault to the <code>perf_sw_event()</code> function from <a href="http://lxr.free-electrons.com/source/arch/x86/mm/fault.c#L1394"><code>fault.c</code></a> for each hardware architecture.</p>
+<p>After a few levels of indirection and some error-checking, execution will end up in the <a href="http://lxr.free-electrons.com/source/kernel/events/core.c?v=4.8#L7140"><code>perf_swevent_event()</code></a> function:</p>
+<pre><code>static void perf_swevent_event(struct perf_event *event, u64 nr,
+                   struct perf_sample_data *data,
+                   struct pt_regs *regs)
+{
+    struct hw_perf_event *hwc = &amp;event-&gt;hw;
+
+    local64_add(nr, &amp;event-&gt;count);
+
+    if (!regs)
+        return;
+
+    if (!is_sampling_event(event))
+        return;
+
+    if ((event-&gt;attr.sample_type &amp; PERF_SAMPLE_PERIOD) &amp;&amp; !event-&gt;attr.freq) {
+        data-&gt;period = nr;
+        return perf_swevent_overflow(event, 1, data, regs);
+    } else
+        data-&gt;period = event-&gt;hw.last_period;
+
+    if (nr == 1 &amp;&amp; hwc-&gt;sample_period == 1 &amp;&amp; !event-&gt;attr.freq)
+        return perf_swevent_overflow(event, 1, data, regs);
+
+    if (local64_add_negative(nr, &amp;hwc-&gt;period_left))
+        return;
+
+    perf_swevent_overflow(event, 0, data, regs);
+}</code></pre>
+<p>Now, before falling down the rabbit-hole of function-chasing, it's fair to assume that at some point, we will call <a href="http://lxr.free-electrons.com/source/kernel/events/core.c?v=4.8#L7114"><code>perf_swevent_overflow()</code></a>, which will eventually call the event's <a href="http://lxr.free-electrons.com/source/kernel/events/core.c?v=4.8#L7052"><code>overflow_handler</code></a> function.</p>
+<p>In the case of a software event, this resolves to <a href="http://lxr.free-electrons.com/source/kernel/events/ring_buffer.c?v=4.8#L117"><code>__perf_output_begin()</code></a>, which writes an entry to <code>perf</code>'s ring_buffer so that the data can be read by the user-space side of <code>perf</code>.</p>
+<p>/home/pricem/dev/linux-4.8/tools/perf/tests/attr/README tools/include/uapi/linux/perf_event.h:</p>
+<h2 id="hardware-debug-registers">Hardware debug registers</h2>
+<p>Tracers and debuggers rely on a feature of the CPU called a debug register.</p>
+<p>These registers are used to specify a memory address that can trigger an interrupt on the CPU. On some architectures, debug registers can be used to specify what kind of memory access will trigger an interrupt (i.e. read/write/execute). The Wikipedia entry on <a href="https://en.wikipedia.org/wiki/X86_debug_register#DR7_-_Debug_control">x86 debug registers</a> goes into some detail of how these options are encoded.</p>
+<p>So in order to perform tracing of some function <strong>f</strong>, a tracing program simply needs to be able to resolve the function to a particular memory address, and then instruct the CPU to fire an interrupt when that memory is accessed.</p>
+<p>Static trace points</p>
+<p>http://lxr.free-electrons.com/source/include/linux/tracepoint.h#L365</p>
+<p>Software breakpoints</p>
+<p>Software breakpoints are in fact set by replacing the instruction to be breakpointed with a breakpoint instruction. The breakpoint instruction is present in most CPUs, and usually as short as the shortest instruction, so only one byte on x86 (0xcc, INT 3). On Cortex-M CPUs, instructions are 2 or 4 bytes, so the breakpoint instruction is a 2 byte instruction.</p>
+<p>http://www.nynaeve.net/?p=80</p>
+<h2 id="function-address-resolution">Function address resolution</h2>
+<p>When we query a tracing tool such as <code>perf</code>, it will display a list of available function trace-points:</p>
+<pre><code>[root@localhost ~]# grep finish_task_switch /proc/kallsyms 
+ffffffff810cf370 t finish_task_switch
+
+</code></pre>
+<p>https://onebitbug.me/2011/03/04/introducing-linux-kernel-symbols/</p>
+<p>http://events.linuxfoundation.org/sites/events/files/lcjp13_takata.pdf</p>
+<p>http://www.cs.columbia.edu/~nahum/w6998/papers/ols2009-breakpoint.pdf</p>
+<p>user tracing: ptrace</p>
+<p>Documentation/kprobes.txt</p>
+<pre><code>[root@localhost ~]# perf probe -F -x /home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so | grep -v &quot;::&quot;
+[root@localhost ~]# perf probe  -x /home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so vm_exit
+Added new event:
+  probe_libjvm:vm_exit (on vm_exit in /home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+
+You can now use it in all perf tools, such as:
+
+    perf record -e probe_libjvm:vm_exit -aR sleep 1
+
+[root@localhost ~]# perf record -a -e probe_libjvm:vm_exit
+
+
+[root@localhost ~]# perf script
+Failed to open /tmp/perf-9083.map, continuing without symbols
+java  9105 [003] 16470.231000: probe_libjvm:vm_exit: (7fb310d53b10)
+                  688b10 vm_exit (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+            7fb2fc7ad994 [unknown] (/tmp/perf-9083.map)
+            7fb2fc79fc4d [unknown] (/tmp/perf-9083.map)
+            7fb2fc79fc4d [unknown] (/tmp/perf-9083.map)
+            7fb2fc79fc4d [unknown] (/tmp/perf-9083.map)
+            7fb2fc79fc92 [unknown] (/tmp/perf-9083.map)
+            7fb2fc79fc92 [unknown] (/tmp/perf-9083.map)
+            7fb2fc7987a7 [unknown] (/tmp/perf-9083.map)
+                  68bbe6 JavaCalls::call_helper (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                  68c0f1 JavaCalls::call_virtual (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                  68c597 JavaCalls::call_virtual (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                  7232d0 thread_entry (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                  a68f3f JavaThread::thread_main_inner (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                  a6906c JavaThread::run (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                  91cb88 java_start (/home/mark/Programs/jdk1.8.0_65/jre/lib/amd64/server/libjvm.so)
+                    75ca start_thread (/usr/lib64/libpthread-2.23.so)
+
+  mem:&lt;addr&gt;[/len][:access]                          [Hardware breakpoint]</code></pre>
