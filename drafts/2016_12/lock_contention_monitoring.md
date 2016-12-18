@@ -309,15 +309,16 @@ Before looking at the test results, let's explore the other metrics recorded in 
    * noUpdates: number of reads of the counter value where it __had not__ changed from its previous value (i.e. Writer has not made progress)
    
 So, a high proportion of *noUpdates* implies that the reader was able to observe the counter value between updates
-made by the Writer thread ()
+made by the Writer thread (read-biased), a lower proportion implies that the writer was making more
+progress between subsequent read operations.
 
 
 ```
-j.u.c.Lock   thrpt:     35307498, updates:     20144880 (36%), noUpdates:     35775956 (63%)
-sync         thrpt:    102022788, updates:      8606992 ( 6%), noUpdates:    131641655 (93%)
-volatile     thrpt:    265152345, updates:    163680705 (96%), noUpdates:      6610031 ( 3%)
-atomic       thrpt:    348515399, updates:    189718822 (96%), noUpdates:      6625568 ( 3%)
-lazySet      thrpt:    524784377, updates:    271545440 (98%), noUpdates:      4886772 ( 1%)
-sfence       thrpt:    566560294, updates:    135594477 (97%), noUpdates:      3852069 ( 2%)
+j.u.c.Lock   thrpt:     38868321, reads:     49733367, updates:     17779431 (35%), noUpdates:     31953936 (64%)
+sync         thrpt:     59240576, reads:    210528095, updates:      1142108 ( 0%), noUpdates:    209385987 (99%)
+volatile     thrpt:    260426497, reads:    218205980, updates:    201582574 (92%), noUpdates:     16623406 ( 7%)
+atomic       thrpt:    351818790, reads:    223158685, updates:    204194198 (91%), noUpdates:     18964487 ( 8%)
+lazySet      thrpt:    474050815, reads:    271181166, updates:    266660114 (98%), noUpdates:      4521052 ( 1%)
+sfence       thrpt:    549367363, reads:    130982471, updates:    127470263 (97%), noUpdates:      3512208 ( 2%)
 ```
 
