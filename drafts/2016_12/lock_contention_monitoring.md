@@ -22,7 +22,7 @@ lock as contended. Future bias operations will not be made on a lock that
 is marked so. So, the safepoint overhead incurred when a lock is unbiased
 will not occur repeatedly for a given lock.
 
-== Thread contention monitoring ==
+## Thread contention monitoring
 
 While looking for a way to observe the locking overhead, I stumbled across the
 [`ThreadMXBean`](http://download.java.net/java/jigsaw/docs/api/java/lang/management/ThreadMXBean.html)
@@ -34,7 +34,7 @@ about the contention effects experienced for a given `Thread`.
 In order to demonstrate the utility of this information, we will use a 
 naive example that will magnify the effects of lock contention.
 
-== The Java Memory Model, lock-free algorithms, and the single-writer principle
+## The Java Memory Model, lock-free algorithms, and the single-writer principle
 
 One of the features of the Java Memory Model (JMM) is the definition of a *happens-before*
 relation, which describes an operation that guarantees all memory operations that happened
@@ -80,7 +80,7 @@ This effect was entirely implicit, and since JDK8, there is an explicit method o
 [Unsafe](http://hg.openjdk.java.net/jdk8u/jdk8u/jdk/file/8b04ee324a1a/src/share/classes/sun/misc/Unsafe.java#l1123)
 class called `storeFence()`, which will achieve the same result.
 
-== A naive, flawed, and possibly dangerous experiment
+## A naive, flawed, and possibly dangerous experiment
 
 For this post, I am comparing different mechanisms for providing a minimal *happens-before* edge
 between two threads. Our requirement is that we can do some work on the writer thread *W*, publish a counter
@@ -88,5 +88,236 @@ value, read the counter value on the reader thread *R*, and assume that writes m
 to *R*.
 
 Now, this sort of thing is not recommended and is included here merely for the purposes of 
-demonstration and discussion. Be warned, if you do this, you may attract the attention of those in the know:
+demonstration and discussion. Be warned, if you use these techniques, you may attract the attention of those in the know:
  
+![lazySet](https://github.com/epickrram/blog-images/raw/master/2016_12/lazyset.png)
+
+With that caveat, let's look at our experiment. On our writer thread *W*, we are going to do the following:
+
+   1. Perform a memory write to a particular location
+   2. Publish a counter value
+
+on the reader thread *R*:
+
+   1. Read the counter value
+   2. Assert that the memory write in *W*.1 is visible to *R*
+
+We can loosely determine the throughput of each available *happens-before* mechanism by comparing
+the maximum value of the counter value when the test is executed for a set amount of time.
+
+### The Writer
+
+Our writer thread will simply update a counter, set some unprotected variable, then publish the counter:
+
+```
+    public void run()
+    {
+        while(!Thread.currentThread().isInterrupted())
+        {
+            final long updated = value++;
+            exchanger.unprotectedSetValueForCounter(updated);
+            exchanger.updateCounter(updated);
+        }
+    }
+```
+
+### The Reader
+
+The reader is a little more complicated. First we read the latest-published counter value,
+then read the unprotected variable. After a quick (non-exhaustive, open to abuse) check to
+make sure the counter update __probably__ hasn't been reordered with the variable write,
+we update a couple of metrics (more on these later).
+
+```
+    public void run()
+    {
+        while(!Thread.currentThread().isInterrupted())
+        {
+            final long current = exchanger.getCounter();
+
+            final long state = exchanger.unprotectedGetValueForCounter(current);
+            /*
+            If this condition does not hold true, then the write before the
+            counter-publish in writer thread has been re-ordered
+             */
+            if(state < current)
+            {
+                System.err.println(
+                        String.format("Previous write for counter %d was not visible to reader!%n" +
+                                "Expected %d > %d%n", current, state, current));
+                return;
+            }
+
+            if(current != value)
+            {
+                distinctUpdateCount++;
+            }
+            else
+            {
+                noUpdateCount++;
+            }
+            value = current;
+        }
+    }
+```
+
+### Variables
+
+We will test a number of different mechanisms for providing memory ordering:
+
+#### Intrinsic lock
+
+```
+    private long value;
+
+    @Override
+    public void updateCounter(final long v)
+    {
+        synchronized (lock)
+        {
+            value = v;
+        }
+    }
+
+    @Override
+    public long getCounter()
+    {
+        synchronized (lock)
+        {
+            return value;
+        }
+    }
+```
+
+#### j.u.c.Lock
+
+```
+    private long value;
+
+    @Override
+    public void updateCounter(final long v)
+    {
+        lock.lock();
+        try
+        {
+            value = v;
+        }
+        finally
+        {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public long getCounter()
+    {
+        lock.lock();
+        try
+        {
+            return value;
+        }
+        finally
+        {
+            lock.unlock();
+        }
+    }
+```
+
+#### Atomic
+
+```
+    private final AtomicLong value = new AtomicLong();
+
+    @Override
+    public void updateCounter(final long v)
+    {
+        value.set(v);
+    }
+
+    @Override
+    public long getCounter()
+    {
+        return value.get();
+    }
+```
+
+#### volatile
+
+```
+    private volatile long value;
+
+    @Override
+    public void updateCounter(final long v)
+    {
+        value = v;
+    }
+
+    @Override
+    public long getCounter()
+    {
+        return value;
+    }
+```
+
+#### lazySet
+
+```
+    private final AtomicLong value = new AtomicLong();
+
+    @Override
+    public void updateCounter(final long v)
+    {
+        value.lazySet(v);
+    }
+
+    @Override
+    public long getCounter()
+    {
+        return value.get();
+    }
+```
+
+#### storeFence
+
+```
+    private long value;
+
+    @Override
+    public void updateCounter(final long v)
+    {
+        value = v;
+        THE_UNSAFE.storeFence();
+    }
+
+    @Override
+    public long getCounter()
+    {
+        return value;
+    }
+```
+
+Each run of the experiment is executed for the same amount of wall-time (15 sec) and we will
+compare how many updates to the counter were made during that time. We can expect a higher 
+number of updates when there is little or no *contention* on the counter variable.
+This essentially demonstrates the __throughput__ of the writer.
+
+### Results
+
+Before looking at the test results, let's explore the other metrics recorded in the Reader thread:
+
+   * updates: number of reads of the counter value where it had changed from its previous value (i.e. Writer has made progress since last read)
+   * noUpdates: number of reads of the counter value where it __had not__ changed from its previous value (i.e. Writer has not made progress)
+   
+So, a high proportion of *noUpdates* implies that the reader was able to observe the counter value between updates
+made by the Writer thread ()
+
+
+```
+j.u.c.Lock   thrpt:     35307498, updates:     20144880 (36%), noUpdates:     35775956 (63%)
+sync         thrpt:    102022788, updates:      8606992 ( 6%), noUpdates:    131641655 (93%)
+volatile     thrpt:    265152345, updates:    163680705 (96%), noUpdates:      6610031 ( 3%)
+atomic       thrpt:    348515399, updates:    189718822 (96%), noUpdates:      6625568 ( 3%)
+lazySet      thrpt:    524784377, updates:    271545440 (98%), noUpdates:      4886772 ( 1%)
+sfence       thrpt:    566560294, updates:    135594477 (97%), noUpdates:      3852069 ( 2%)
+```
+
