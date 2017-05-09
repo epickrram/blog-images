@@ -5,7 +5,7 @@ was the idea of using SVGs to render data generated on a server that runs in hea
 Traditionally, I have recorded profiles and traces on remote servers, then pulled the data
 back to my workstation to filter, aggregate and plot. The scripts used to do this data munging
 tend to be one-shot affairs, and I've probably lost many useful utilities over the years. I
-really like the idea of building the rendering into the server-side script, as it forces us to 
+am increasingly coming around to the idea of building the rendering into the server-side script, as it forces us to 
 think about how we want to interpret the data, and also gives us the ability to deploy and serve
 such monitoring from a whole fleet of servers.
 
@@ -18,8 +18,8 @@ These tools are available in the [grav](https://github.com/epickrram/grav) repos
 
 ### Scheduler Profile
 
-The scheduler profile tool can be used to determine whether your application's threads are
-getting enough time of CPU, or whether there is resource contention at play.
+The scheduler profile tool can be used to indicate whether your application's threads are
+getting enough time on CPU, or whether there is resource contention at play.
 
 In an ideal scenario, your application threads will only ever yield the CPU to one of the 
 kernel's helper threads, such as `ksoftirqd`, and then only sparingly. Running the 
@@ -35,3 +35,31 @@ Threads will tend to be in one of three states when pre-empted by the scheduler:
 
 There are a [number of other states](http://lxr.free-electrons.com/source/include/linux/sched.h?v=4.4#L207), 
 which will not be covered here.
+
+Once the profile is collected, these states are rendered as a bar chart for each thread in your application.
+The examples here are from a JVM-based service, but the approach will work just as well for other runtimes,
+albeit without the mapping of `pid` to thread name.
+
+The bar chart will show the proportion of states encountered per-thread as the OS scheduler swapped out the 
+application thread. The `sleeping` state is marked green (the CPU was intentionally yielded), the `runnable` state is
+marked red (the program thread was pre-empted while it still had useful work to do).
+
+Let's take a look at an initial example running on my 4-core laptop:
+
+### scheduling-profile-initial.svg
+
+This profile is taken from a simple drop-wizard application, the threads actually processing inbound requests are prefixed with `'dw-'`.
+We can see that these request processing threads were ready to yield the CPU (i.e. entering sleep state) about 30% of the time, but 
+they were mostly attempting to do useful work when they were moved off the CPU.
+
+This effect is magnified due to the fact that I'm running a desktop OS, the application, and a load-generator all on the same
+laptop, but these effects will still be present on a larger system. 
+
+This can be a useful signal that these threads would benefit from their own dedicated pool of CPUs. Further work is needed
+to annotate the chart with those processes that were switched _in_ by the scheduler. 
+
+Using a combination of kernel tuning and thread-pinning, it should be possible to ensure that the application 
+threads are only very rarely pre-empted by essential kernel threads. More details on how to go about achieving 
+this can be found in [previous](jitter1) [posts](jitter2).
+
+
