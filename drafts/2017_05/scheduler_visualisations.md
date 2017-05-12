@@ -46,7 +46,7 @@ marked red (the program thread was pre-empted while it still had useful work to 
 
 Let's take a look at an initial example running on my 4-core laptop:
 
-### scheduling-profile-initial.svg
+![Scheduling profile](scheduler-profile-fragment.png)
 
 This profile is taken from a simple drop-wizard application, the threads actually processing inbound requests are prefixed with `'dw-'`.
 We can see that these request processing threads were ready to yield the CPU (i.e. entering sleep state) about 30% of the time, but 
@@ -57,7 +57,8 @@ This effect is magnified due to the fact that I'm running a desktop OS, the appl
 laptop, but these effects will still be present on a larger system. 
 
 This can be a useful signal that these threads would benefit from their own dedicated pool of CPUs. Further work is needed
-to annotate the chart with those processes that were switched _in_ by the scheduler.
+to annotate the chart with those processes that were switched _in_ by the scheduler - i.e. the processes that are 
+contending with the application for CPU resource.
 
 Using a combination of kernel tuning and thread-pinning, it should be possible to ensure that the application 
 threads are only very rarely pre-empted by essential kernel threads. More details on how to go about achieving 
@@ -69,17 +70,32 @@ One of the operating system's responsibilities is to allocate resources to proce
 In modern multi-core systems, the scheduler must move runnable threads to otherwise idle CPUs to try
 to maximise system resource usage.
 
-An good example if this is network packet handling. When a network packet is received, it is (by default) 
-processed by the CPU that catches the network card's interrupt. The kernel may then decide to migrate any
+A good example if this is network packet handling. When a network packet is received, it is (by default) 
+processed by the CPU that handles the network card's interrupt. The kernel may then decide to migrate any
 task that is waiting for data to arrive (e.g. a thread blocked on a socket read) to the receiving CPU,
 since the packet data is more likely to be available in the CPU's cache.
 
 While we can generally rely on the OS to do a good job of this for us, we may wish to force this cache-locality
-by having a network-handling thread on an adjacent CPU to the interrupt handler, sharing the L1 cache for instance.
-Such a set-up would mean that the network-handling thread would always be on the correct CPU, rather than 
-risking a task migration.
+by having a network-handling thread on an adjacent CPU to the interrupt handler.
+Such a set-up would mean that the network-handling thread would always be close to the data, without the
+overhead and jitter introduced by actually running on a CPU responsible for handling interrupts.
+
+This is a common configuration in low-latency applications in the finance industry.
 
 The `perf-cpu-tenancy` script can be used to build a picture showing how the scheduler allocates CPU to your 
-application threads. In the example below, 
+application threads. In the example below, the threads named `dw-` are the message-processing threads, and
+it is clear that they are mostly executed on CPU 2. This correlates with the network card setup on the 
+machine running the application - the IRQ of the network card is associated with CPU 2.
 
 
+![CPU tenancy by thread](thread_irq_locality.png)
+
+### Further work
+
+To make the `scheduling-profile` tool more useful, I intend to annotate the `runnable` state portion of the bar
+chart with a further breakdown detailing the incoming processes that kicked application threads off-CPU.
+
+This will provide enough information to direct system-tuning efforts to ensure an application has the
+best chance possible to get CPU-time when required.
+
+If you've read this far, perhaps you're interested in [contributing](https://github.com/epickrram/grav)?

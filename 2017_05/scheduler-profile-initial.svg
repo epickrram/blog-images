@@ -1,0 +1,80 @@
+<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg version="1.1" width="1200" height="660" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<text text-anchor="middle" x="600" y="30" font-size="20" font-family="monospace" fill="#000">Thread scheduling states</text><g><title>Gang worker#0 (Parallel GC Threads)/Sleeping (95.18%)</title><rect x="10" y="50" width="1123.07017544" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="62" width="1123.07017544" font-size="12" font-family="monospace" fill="#000">Gang worker#0 (Parallel GC Threads)/Sleeping (95.18%)</text></g>
+<g><title>Gang worker#0 (Parallel GC Threads)/Runnable (4.82%)</title><rect x="1133.07017544" y="50" width="56.9298245614" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+<g><title>Gang worker#1 (Parallel GC Threads)/Sleeping (97.75%)</title><rect x="10" y="81.0" width="1153.48314607" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="93.0" width="1153.48314607" font-size="12" font-family="monospace" fill="#000">Gang worker#1 (Parallel GC Threads)/Sleeping (97.75%)</text></g>
+<g><title>Gang worker#1 (Parallel GC Threads)/Runnable (2.25%)</title><rect x="1163.48314607" y="81.0" width="26.5168539326" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+<g><title>Gang worker#2 (Parallel GC Threads)/Sleeping (93.17%)</title><rect x="10" y="112.0" width="1099.36218679" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="124.0" width="1099.36218679" font-size="12" font-family="monospace" fill="#000">Gang worker#2 (Parallel GC Threads)/Sleeping (93.17%)</text></g>
+<g><title>Gang worker#2 (Parallel GC Threads)/Runnable (6.83%)</title><rect x="1109.36218679" y="112.0" width="80.6378132118" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+<g><title>Gang worker#3 (Parallel GC Threads)/Sleeping (95.32%)</title><rect x="10" y="143.0" width="1124.76595745" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="155.0" width="1124.76595745" font-size="12" font-family="monospace" fill="#000">Gang worker#3 (Parallel GC Threads)/Sleeping (95.32%)</text></g>
+<g><title>Gang worker#3 (Parallel GC Threads)/Runnable (4.68%)</title><rect x="1134.76595745" y="143.0" width="55.2340425532" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+<g><title>G1 Concurrent Refinement Thread#4/Sleeping (73.13%)</title><rect x="10" y="174.0" width="862.985074627" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="186.0" width="862.985074627" font-size="12" font-family="monospace" fill="#000">G1 Concurrent Refinement Thread#4/Sleeping (73.13%)</text></g>
+<g><title>G1 Concurrent Refinement Thread#4/Runnable (26.87%)</title><rect x="872.985074627" y="174.0" width="317.014925373" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+<g><title>VM Thread/Sleeping (88.08%)</title><rect x="10" y="205.0" width="1039.36685289" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="217.0" width="1039.36685289" font-size="12" font-family="monospace" fill="#000">VM Thread/Sleeping (88.08%)</text></g>
+<g><title>VM Thread/Runnable (11.73%)</title><rect x="1049.36685289" y="205.0" width="138.43575419" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+<g><title>VM Thread/Blocked I/O (0.19%)</title><rect x="1187.80260708" y="205.0" width="2.19739292365" height="31.0" style="fill: #fce94f; stroke:#b3a639"></rect>
+</g>
+<g><title>C2 CompilerThread0/Sleeping (0.81%)</title><rect x="10" y="236.0" width="9.53150242326" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="248.0" width="9.53150242326" font-size="12" font-family="monospace" fill="#000">C2 CompilerThread0/Sleeping (0.81%)</text></g>
+<g><title>C2 CompilerThread0/Runnable (99.19%)</title><rect x="19.5315024233" y="236.0" width="1170.46849758" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+<g><title>C2 CompilerThread1/Sleeping (36.36%)</title><rect x="10" y="267.0" width="429.090909091" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="279.0" width="429.090909091" font-size="12" font-family="monospace" fill="#000">C2 CompilerThread1/Sleeping (36.36%)</text></g>
+<g><title>C2 CompilerThread1/Runnable (63.64%)</title><rect x="439.090909091" y="267.0" width="750.909090909" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+<g><title>VM Periodic Task Thread/Sleeping (96.79%)</title><rect x="10" y="298.0" width="1142.17948718" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="310.0" width="1142.17948718" font-size="12" font-family="monospace" fill="#000">VM Periodic Task Thread/Sleeping (96.79%)</text></g>
+<g><title>VM Periodic Task Thread/Runnable (3.21%)</title><rect x="1152.17948718" y="298.0" width="37.8205128205" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+<g><title>AsyncAppender-Worker-async-console-appender/Sleeping (94.14%)</title><rect x="10" y="329.0" width="1110.86252705" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="341.0" width="1110.86252705" font-size="12" font-family="monospace" fill="#000">AsyncAppender-Worker-async-console-appender/Sleeping (94.14%)</text></g>
+<g><title>AsyncAppender-Worker-async-console-appender/Runnable (5.86%)</title><rect x="1120.86252705" y="329.0" width="69.1374729549" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+<g><title>dw-18 - POST /calculator/Sleeping (45.73%)</title><rect x="10" y="360.0" width="539.605781866" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="372.0" width="539.605781866" font-size="12" font-family="monospace" fill="#000">dw-18 - POST /calculator/Sleeping (45.73%)</text></g>
+<g><title>dw-18 - POST /calculator/Runnable (54.27%)</title><rect x="549.605781866" y="360.0" width="640.394218134" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+<g><title>dw-19/Sleeping (28.59%)</title><rect x="10" y="391.0" width="337.40769835" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="403.0" width="337.40769835" font-size="12" font-family="monospace" fill="#000">dw-19/Sleeping (28.59%)</text></g>
+<g><title>dw-19/Runnable (71.41%)</title><rect x="347.40769835" y="391.0" width="842.59230165" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+<g><title>dw-22/Sleeping (31.29%)</title><rect x="10" y="422.0" width="369.238410596" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="434.0" width="369.238410596" font-size="12" font-family="monospace" fill="#000">dw-22/Sleeping (31.29%)</text></g>
+<g><title>dw-22/Runnable (68.71%)</title><rect x="379.238410596" y="422.0" width="810.761589404" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+<g><title>dw-23/Sleeping (23.65%)</title><rect x="10" y="453.0" width="279.022457067" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="465.0" width="279.022457067" font-size="12" font-family="monospace" fill="#000">dw-23/Sleeping (23.65%)</text></g>
+<g><title>dw-23/Runnable (76.35%)</title><rect x="289.022457067" y="453.0" width="900.977542933" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+<g><title>metrics-csv-reporter-1-thread-1/Sleeping (16.67%)</title><rect x="10" y="484.0" width="196.666666667" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="496.0" width="196.666666667" font-size="12" font-family="monospace" fill="#000">metrics-csv-reporter-1-thread-1/Sleeping (16.67%)</text></g>
+<g><title>metrics-csv-reporter-1-thread-1/Runnable (83.33%)</title><rect x="206.666666667" y="484.0" width="983.333333333" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+<g><title>dw-admin-32-acceptor-1@1dac9f51-admin@515f4131{HTTP/1.1,[http/1.1]}{0.0.0.0:8081}/Sleeping (87.50%)</title><rect x="10" y="515.0" width="1032.5" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="527.0" width="1032.5" font-size="12" font-family="monospace" fill="#000">dw-admin-32-acceptor-1@1dac9f51-admin@515f4131{HTTP/1.1,[http/1.1]}{0.0.0.0:8081}/Sleeping (87.50%)</text></g>
+<g><title>dw-admin-32-acceptor-1@1dac9f51-admin@515f4131{HTTP/1.1,[http/1.1]}{0.0.0.0:8081}/Runnable (12.50%)</title><rect x="1042.5" y="515.0" width="147.5" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+<g><title>dw-36/Sleeping (37.74%)</title><rect x="10" y="546.0" width="445.283018868" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="558.0" width="445.283018868" font-size="12" font-family="monospace" fill="#000">dw-36/Sleeping (37.74%)</text></g>
+<g><title>dw-36/Runnable (62.26%)</title><rect x="455.283018868" y="546.0" width="734.716981132" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+<g><title>dw-37/Sleeping (24.44%)</title><rect x="10" y="577.0" width="288.343004513" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="589.0" width="288.343004513" font-size="12" font-family="monospace" fill="#000">dw-37/Sleeping (24.44%)</text></g>
+<g><title>dw-37/Runnable (75.56%)</title><rect x="298.343004513" y="577.0" width="891.656995487" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+<g><title>dw-42/Sleeping (38.01%)</title><rect x="10" y="608.0" width="448.574445618" height="31.0" style="fill: #acff90; stroke:#679657"></rect>
+<text x="10" y="620.0" width="448.574445618" font-size="12" font-family="monospace" fill="#000">dw-42/Sleeping (38.01%)</text></g>
+<g><title>dw-42/Runnable (61.99%)</title><rect x="458.574445618" y="608.0" width="731.425554382" height="31.0" style="fill: #ffaeae; stroke:#b07979"></rect>
+</g>
+</svg>

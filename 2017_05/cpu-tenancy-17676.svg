@@ -1,0 +1,234 @@
+<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg version="1.1" width="1200" height="1390"  xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<text text-anchor="middle" x="600" y="30" font-size="20" font-family="monospace" fill="#000">Thread CPU tenancy</text><g><title>Gang worker#0 (Parallel GC Threads)/CPU0 (17.75%)</title><rect x="20" y="50" width="7.7982336658" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="72" width="7.7982336658" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>Gang worker#0 (Parallel GC Threads)/CPU1 (33.29%)</title><rect x="27.7982336658" y="50" width="14.6280592293" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="27.7982336658" y="72" width="14.6280592293" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>Gang worker#0 (Parallel GC Threads)/CPU2 (16.13%)</title><rect x="42.4262928951" y="50" width="7.08466980096" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="42.4262928951" y="72" width="7.08466980096" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>Gang worker#0 (Parallel GC Threads)/CPU3 (32.83%)</title><rect x="49.5109626961" y="50" width="14.4241838394" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="49.5109626961" y="72" width="14.4241838394" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="62" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">Gang worker#0 (Parallel GC Threads)</text><g><title>Gang worker#1 (Parallel GC Threads)/CPU0 (18.32%)</title><rect x="20" y="85.0" width="8.46082868316" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="107.0" width="8.46082868316" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>Gang worker#1 (Parallel GC Threads)/CPU1 (36.42%)</title><rect x="28.4608286832" y="85.0" width="16.8197196713" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="28.4608286832" y="107.0" width="16.8197196713" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>Gang worker#1 (Parallel GC Threads)/CPU2 (15.01%)</title><rect x="45.2805483545" y="85.0" width="6.93176325849" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="45.2805483545" y="107.0" width="6.93176325849" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>Gang worker#1 (Parallel GC Threads)/CPU3 (30.24%)</title><rect x="52.212311613" y="85.0" width="13.965464212" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="52.212311613" y="107.0" width="13.965464212" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="97.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">Gang worker#1 (Parallel GC Threads)</text><g><title>Gang worker#2 (Parallel GC Threads)/CPU0 (22.01%)</title><rect x="20" y="120.0" width="9.27633024298" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="142.0" width="9.27633024298" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>Gang worker#2 (Parallel GC Threads)/CPU1 (33.74%)</title><rect x="29.276330243" y="120.0" width="14.2203084494" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="29.276330243" y="142.0" width="14.2203084494" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>Gang worker#2 (Parallel GC Threads)/CPU2 (16.57%)</title><rect x="43.4966386924" y="120.0" width="6.98273210598" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="43.4966386924" y="142.0" width="6.98273210598" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>Gang worker#2 (Parallel GC Threads)/CPU3 (27.69%)</title><rect x="50.4793707984" y="120.0" width="11.671866075" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="50.4793707984" y="142.0" width="11.671866075" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="132.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">Gang worker#2 (Parallel GC Threads)</text><g><title>Gang worker#3 (Parallel GC Threads)/CPU0 (18.53%)</title><rect x="20" y="155.0" width="7.84920251329" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="177.0" width="7.84920251329" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>Gang worker#3 (Parallel GC Threads)/CPU1 (30.32%)</title><rect x="27.8492025133" y="155.0" width="12.8441495672" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="27.8492025133" y="177.0" width="12.8441495672" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>Gang worker#3 (Parallel GC Threads)/CPU2 (17.09%)</title><rect x="40.6933520805" y="155.0" width="7.23757634342" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="40.6933520805" y="177.0" width="7.23757634342" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>Gang worker#3 (Parallel GC Threads)/CPU3 (34.06%)</title><rect x="47.9309284239" y="155.0" width="14.4241838394" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="47.9309284239" y="177.0" width="14.4241838394" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="167.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">Gang worker#3 (Parallel GC Threads)</text><g><title>G1 Concurrent Refinement Thread#4/CPU0 (20.97%)</title><rect x="20" y="190.0" width="0.662595017356" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="212.0" width="0.662595017356" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>G1 Concurrent Refinement Thread#4/CPU1 (38.71%)</title><rect x="20.6625950174" y="190.0" width="1.22325233973" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="20.6625950174" y="212.0" width="1.22325233973" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>G1 Concurrent Refinement Thread#4/CPU2 (17.74%)</title><rect x="21.8858473571" y="190.0" width="0.560657322378" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="21.8858473571" y="212.0" width="0.560657322378" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>G1 Concurrent Refinement Thread#4/CPU3 (22.58%)</title><rect x="22.4465046795" y="190.0" width="0.713563864845" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="22.4465046795" y="212.0" width="0.713563864845" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="202.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">G1 Concurrent Refinement Thread#4</text><g><title>G1 Concurrent Refinement Thread#0/CPU0 (100.00%)</title><rect x="20" y="225.0" width="0.101937694978" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="247.0" width="0.101937694978" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<text x="20" y="237.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">G1 Concurrent Refinement Thread#0</text><g><title>G1 Main Concurrent Mark GC Thread/CPU2 (100.00%)</title><rect x="20" y="260.0" width="0.0509688474889" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="20" y="282.0" width="0.0509688474889" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<text x="20" y="272.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">G1 Main Concurrent Mark GC Thread</text><g><title>Gang worker#0 (G1 Parallel Marking Threads)/CPU0 (90.91%)</title><rect x="20" y="295.0" width="0.509688474889" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="317.0" width="0.509688474889" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>Gang worker#0 (G1 Parallel Marking Threads)/CPU2 (9.09%)</title><rect x="20.5096884749" y="295.0" width="0.0509688474889" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="20.5096884749" y="317.0" width="0.0509688474889" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<text x="20" y="307.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">Gang worker#0 (G1 Parallel Marking Threads)</text><g><title>VM Thread/CPU0 (11.76%)</title><rect x="20" y="330.0" width="1.42712772969" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="352.0" width="1.42712772969" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>VM Thread/CPU1 (33.61%)</title><rect x="21.4271277297" y="330.0" width="4.07750779911" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="21.4271277297" y="352.0" width="4.07750779911" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>VM Thread/CPU2 (13.45%)</title><rect x="25.5046355288" y="330.0" width="1.63100311964" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="25.5046355288" y="352.0" width="1.63100311964" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>VM Thread/CPU3 (41.18%)</title><rect x="27.1356386484" y="330.0" width="4.99494705391" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="27.1356386484" y="352.0" width="4.99494705391" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="342.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">VM Thread</text><g><title>Reference Handler/CPU0 (100.00%)</title><rect x="20" y="365.0" width="0.0509688474889" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="387.0" width="0.0509688474889" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<text x="20" y="377.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">Reference Handler</text><g><title>Finalizer/CPU0 (50.00%)</title><rect x="20" y="400.0" width="0.0509688474889" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="422.0" width="0.0509688474889" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>Finalizer/CPU1 (50.00%)</title><rect x="20.0509688475" y="400.0" width="0.0509688474889" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="20.0509688475" y="422.0" width="0.0509688474889" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<text x="20" y="412.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">Finalizer</text><g><title>C2 CompilerThread0/CPU0 (21.81%)</title><rect x="20" y="435.0" width="2.08972274705" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="457.0" width="2.08972274705" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>C2 CompilerThread0/CPU1 (51.06%)</title><rect x="22.089722747" y="435.0" width="4.89300935893" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="22.089722747" y="457.0" width="4.89300935893" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>C2 CompilerThread0/CPU2 (20.21%)</title><rect x="26.982732106" y="435.0" width="1.93681620458" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="26.982732106" y="457.0" width="1.93681620458" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>C2 CompilerThread0/CPU3 (6.91%)</title><rect x="28.9195483106" y="435.0" width="0.662595017356" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="28.9195483106" y="457.0" width="0.662595017356" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="447.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">C2 CompilerThread0</text><g><title>C2 CompilerThread1/CPU0 (40.54%)</title><rect x="20" y="470.0" width="0.764532712334" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="492.0" width="0.764532712334" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>C2 CompilerThread1/CPU1 (32.43%)</title><rect x="20.7645327123" y="470.0" width="0.611626169867" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="20.7645327123" y="492.0" width="0.611626169867" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>C2 CompilerThread1/CPU2 (8.11%)</title><rect x="21.3761588822" y="470.0" width="0.152906542467" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="21.3761588822" y="492.0" width="0.152906542467" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>C2 CompilerThread1/CPU3 (18.92%)</title><rect x="21.5290654247" y="470.0" width="0.356781932422" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="21.5290654247" y="492.0" width="0.356781932422" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="482.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">C2 CompilerThread1</text><g><title>C1 CompilerThread2/CPU0 (19.05%)</title><rect x="20" y="505.0" width="0.203875389956" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="527.0" width="0.203875389956" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>C1 CompilerThread2/CPU1 (28.57%)</title><rect x="20.20387539" y="505.0" width="0.305813084933" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="20.20387539" y="527.0" width="0.305813084933" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>C1 CompilerThread2/CPU2 (14.29%)</title><rect x="20.5096884749" y="505.0" width="0.152906542467" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="20.5096884749" y="527.0" width="0.152906542467" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>C1 CompilerThread2/CPU3 (38.10%)</title><rect x="20.6625950174" y="505.0" width="0.407750779911" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="20.6625950174" y="527.0" width="0.407750779911" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="517.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">C1 CompilerThread2</text><g><title>VM Periodic Task Thread/CPU0 (26.12%)</title><rect x="20" y="540.0" width="1.78390966211" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="562.0" width="1.78390966211" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>VM Periodic Task Thread/CPU1 (20.15%)</title><rect x="21.7839096621" y="540.0" width="1.3761588822" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="21.7839096621" y="562.0" width="1.3761588822" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>VM Periodic Task Thread/CPU2 (17.91%)</title><rect x="23.1600685443" y="540.0" width="1.22325233973" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="23.1600685443" y="562.0" width="1.22325233973" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>VM Periodic Task Thread/CPU3 (35.82%)</title><rect x="24.383320884" y="540.0" width="2.44650467947" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="24.383320884" y="562.0" width="2.44650467947" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="552.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">VM Periodic Task Thread</text><g><title>AsyncAppender-Worker-async-console-appender/CPU0 (33.83%)</title><rect x="20" y="575.0" width="147.299969243" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="597.0" width="147.299969243" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>AsyncAppender-Worker-async-console-appender/CPU1 (21.85%)</title><rect x="167.299969243" y="575.0" width="95.1078694143" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="167.299969243" y="597.0" width="95.1078694143" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>AsyncAppender-Worker-async-console-appender/CPU2 (19.84%)</title><rect x="262.407838657" y="575.0" width="86.3921964937" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="262.407838657" y="597.0" width="86.3921964937" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>AsyncAppender-Worker-async-console-appender/CPU3 (24.48%)</title><rect x="348.800035151" y="575.0" width="106.575860099" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="348.800035151" y="597.0" width="106.575860099" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="587.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">AsyncAppender-Worker-async-console-appender</text><g><title>dw-17-acceptor-0@793008da-application@2fb68ec6{HTTP/1.1,[http/1.1]}{0.0.0.0:8080}/CPU0 (20.00%)</title><rect x="20" y="610.0" width="0.0509688474889" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="632.0" width="0.0509688474889" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>dw-17-acceptor-0@793008da-application@2fb68ec6{HTTP/1.1,[http/1.1]}{0.0.0.0:8080}/CPU1 (60.00%)</title><rect x="20.0509688475" y="610.0" width="0.152906542467" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="20.0509688475" y="632.0" width="0.152906542467" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>dw-17-acceptor-0@793008da-application@2fb68ec6{HTTP/1.1,[http/1.1]}{0.0.0.0:8080}/CPU2 (20.00%)</title><rect x="20.20387539" y="610.0" width="0.0509688474889" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="20.20387539" y="632.0" width="0.0509688474889" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<text x="20" y="622.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">dw-17-acceptor-0@793008da-application@2fb68ec6{HTTP/1.1,[http/1.1]}{0.0.0.0:8080}</text><g><title>metrics-csv-reporter-1-thread-1/CPU0 (15.08%)</title><rect x="20" y="645.0" width="4.1284766466" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="667.0" width="4.1284766466" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>metrics-csv-reporter-1-thread-1/CPU1 (46.00%)</title><rect x="24.1284766466" y="645.0" width="12.5893053298" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="24.1284766466" y="667.0" width="12.5893053298" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>metrics-csv-reporter-1-thread-1/CPU2 (8.01%)</title><rect x="36.7177819764" y="645.0" width="2.19166044202" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="36.7177819764" y="667.0" width="2.19166044202" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>metrics-csv-reporter-1-thread-1/CPU3 (30.91%)</title><rect x="38.9094424184" y="645.0" width="8.46082868316" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="38.9094424184" y="667.0" width="8.46082868316" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="657.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">metrics-csv-reporter-1-thread-1</text><g><title>dw-admin-29-acceptor-1@76ae943a-admin@d71adc2{HTTP/1.1,[http/1.1]}{0.0.0.0:8081}/CPU0 (66.67%)</title><rect x="20" y="680.0" width="0.101937694978" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="702.0" width="0.101937694978" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>dw-admin-29-acceptor-1@76ae943a-admin@d71adc2{HTTP/1.1,[http/1.1]}{0.0.0.0:8081}/CPU3 (33.33%)</title><rect x="20.101937695" y="680.0" width="0.0509688474889" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="20.101937695" y="702.0" width="0.0509688474889" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="692.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">dw-admin-29-acceptor-1@76ae943a-admin@d71adc2{HTTP/1.1,[http/1.1]}{0.0.0.0:8081}</text><g><title>Scheduler-1255109302/CPU1 (33.33%)</title><rect x="20" y="715.0" width="0.0509688474889" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="20" y="737.0" width="0.0509688474889" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>Scheduler-1255109302/CPU3 (66.67%)</title><rect x="20.0509688475" y="715.0" width="0.101937694978" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="20.0509688475" y="737.0" width="0.101937694978" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="727.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">Scheduler-1255109302</text><g><title>dw-48/CPU0 (29.57%)</title><rect x="20" y="750.0" width="19.7759128257" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="772.0" width="19.7759128257" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>dw-48/CPU1 (25.53%)</title><rect x="39.7759128257" y="750.0" width="17.0745639088" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="39.7759128257" y="772.0" width="17.0745639088" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>dw-48/CPU2 (27.90%)</title><rect x="56.8504767345" y="750.0" width="18.6545981809" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="56.8504767345" y="772.0" width="18.6545981809" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>dw-48/CPU3 (17.00%)</title><rect x="75.5050749154" y="750.0" width="11.36605299" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="75.5050749154" y="772.0" width="11.36605299" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="762.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">dw-48</text><g><title>dw-60/CPU0 (30.15%)</title><rect x="20" y="785.0" width="178.238059669" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="807.0" width="178.238059669" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>dw-60/CPU1 (11.74%)</title><rect x="198.238059669" y="785.0" width="69.4195702799" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="198.238059669" y="807.0" width="69.4195702799" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>dw-60/CPU2 (46.69%)</title><rect x="267.657629949" y="785.0" width="275.996309152" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="267.657629949" y="807.0" width="275.996309152" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>dw-60/CPU3 (11.42%)</title><rect x="543.653939101" y="785.0" width="67.4827540753" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="543.653939101" y="807.0" width="67.4827540753" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="797.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">dw-60</text><g><title>dw-62/CPU0 (29.77%)</title><rect x="20" y="820.0" width="137.259106288" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="842.0" width="137.259106288" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>dw-62/CPU1 (12.61%)</title><rect x="157.259106288" y="820.0" width="58.1554549848" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="157.259106288" y="842.0" width="58.1554549848" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>dw-62/CPU2 (45.39%)</title><rect x="215.414561272" y="820.0" width="209.278087789" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="215.414561272" y="842.0" width="209.278087789" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>dw-62/CPU3 (12.24%)</title><rect x="424.692649062" y="820.0" width="56.4225141702" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="424.692649062" y="842.0" width="56.4225141702" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="832.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">dw-62</text><g><title>dw-64/CPU0 (30.24%)</title><rect x="20" y="855.0" width="158.411177996" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="877.0" width="158.411177996" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>dw-64/CPU1 (12.77%)</title><rect x="178.411177996" y="855.0" width="66.8711279054" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="178.411177996" y="877.0" width="66.8711279054" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>dw-64/CPU2 (44.97%)</title><rect x="245.282305901" y="855.0" width="235.578013094" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="245.282305901" y="877.0" width="235.578013094" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>dw-64/CPU3 (12.02%)</title><rect x="480.860318995" y="855.0" width="62.9465266488" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="480.860318995" y="877.0" width="62.9465266488" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="867.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">dw-64</text><g><title>19210/CPU1 (100.00%)</title><rect x="20" y="890.0" width="0.0509688474889" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="20" y="912.0" width="0.0509688474889" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<text x="20" y="902.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">19210</text><g><title>19211/CPU2 (100.00%)</title><rect x="20" y="925.0" width="0.0509688474889" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="20" y="947.0" width="0.0509688474889" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<text x="20" y="937.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">19211</text><g><title>19212/CPU0 (35.30%)</title><rect x="20" y="960.0" width="23.8024517773" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="982.0" width="23.8024517773" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>19212/CPU1 (13.30%)</title><rect x="43.8024517773" y="960.0" width="8.97051715805" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="43.8024517773" y="982.0" width="8.97051715805" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>19212/CPU2 (38.47%)</title><rect x="52.7729689354" y="960.0" width="25.9431433719" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="52.7729689354" y="982.0" width="25.9431433719" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>19212/CPU3 (12.93%)</title><rect x="78.7161123072" y="960.0" width="8.7156729206" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="78.7161123072" y="982.0" width="8.7156729206" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="972.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">19212</text><g><title>dw-50/CPU0 (30.52%)</title><rect x="20" y="995.0" width="353.97864581" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="1017.0" width="353.97864581" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>dw-50/CPU1 (10.82%)</title><rect x="373.97864581" y="995.0" width="125.485302518" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="373.97864581" y="1017.0" width="125.485302518" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>dw-50/CPU2 (48.95%)</title><rect x="499.463948328" y="995.0" width="567.792961026" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="499.463948328" y="1017.0" width="567.792961026" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>dw-50/CPU3 (9.72%)</title><rect x="1067.25690935" y="995.0" width="112.743090645" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="1067.25690935" y="1017.0" width="112.743090645" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="1007.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">dw-50</text><g><title>dw-51/CPU0 (30.95%)</title><rect x="20" y="1030.0" width="357.495496287" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="1052.0" width="357.495496287" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>dw-51/CPU1 (10.03%)</title><rect x="377.495496287" y="1030.0" width="115.852190342" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="377.495496287" y="1052.0" width="115.852190342" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>dw-51/CPU2 (49.43%)</title><rect x="493.347686629" y="1030.0" width="570.902060723" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="493.347686629" y="1052.0" width="570.902060723" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>dw-51/CPU3 (9.59%)</title><rect x="1064.24974735" y="1030.0" width="110.806274441" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="1064.24974735" y="1052.0" width="110.806274441" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="1042.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">dw-51</text><g><title>dw-52/CPU0 (30.00%)</title><rect x="20" y="1065.0" width="217.99376071" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="1087.0" width="217.99376071" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>dw-52/CPU1 (10.10%)</title><rect x="237.99376071" y="1065.0" width="73.395140384" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="237.99376071" y="1087.0" width="73.395140384" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>dw-52/CPU2 (50.20%)</title><rect x="311.388901094" y="1065.0" width="364.835010326" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="311.388901094" y="1087.0" width="364.835010326" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>dw-52/CPU3 (9.70%)</title><rect x="676.22391142" y="1065.0" width="70.4899160772" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="676.22391142" y="1087.0" width="70.4899160772" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="1077.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">dw-52</text><g><title>19221/CPU3 (100.00%)</title><rect x="20" y="1100.0" width="0.0509688474889" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="20" y="1122.0" width="0.0509688474889" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="1112.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">19221</text><g><title>19224/CPU3 (100.00%)</title><rect x="20" y="1135.0" width="0.0509688474889" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="20" y="1157.0" width="0.0509688474889" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="1147.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">19224</text><g><title>19230/CPU0 (32.97%)</title><rect x="20" y="1170.0" width="21.6617601828" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="1192.0" width="21.6617601828" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>19230/CPU1 (11.40%)</title><rect x="41.6617601828" y="1170.0" width="7.49242058087" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="41.6617601828" y="1192.0" width="7.49242058087" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>19230/CPU2 (41.35%)</title><rect x="49.1541807637" y="1170.0" width="27.1663957116" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="49.1541807637" y="1192.0" width="27.1663957116" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>19230/CPU3 (14.27%)</title><rect x="76.3205764752" y="1170.0" width="9.37826793796" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="76.3205764752" y="1192.0" width="9.37826793796" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="1182.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">19230</text><g><title>19231/CPU0 (28.83%)</title><rect x="20" y="1205.0" width="89.8071092755" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="1227.0" width="89.8071092755" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>19231/CPU1 (8.12%)</title><rect x="109.807109275" y="1205.0" width="25.2805483545" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="109.807109275" y="1227.0" width="25.2805483545" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>19231/CPU2 (55.34%)</title><rect x="135.08765763" y="1205.0" width="172.376642207" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="135.08765763" y="1227.0" width="172.376642207" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>19231/CPU3 (7.71%)</title><rect x="307.464299837" y="1205.0" width="24.0063271673" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="307.464299837" y="1227.0" width="24.0063271673" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="1217.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">19231</text><g><title>19237/CPU1 (100.00%)</title><rect x="20" y="1240.0" width="0.0509688474889" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="20" y="1262.0" width="0.0509688474889" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<text x="20" y="1252.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">19237</text><g><title>19238/CPU3 (100.00%)</title><rect x="20" y="1275.0" width="0.0509688474889" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="20" y="1297.0" width="0.0509688474889" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="1287.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">19238</text><g><title>19241/CPU0 (29.75%)</title><rect x="20" y="1310.0" width="11.56992838" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="1332.0" width="11.56992838" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>19241/CPU1 (18.48%)</title><rect x="31.56992838" y="1310.0" width="7.18660749594" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="31.56992838" y="1332.0" width="7.18660749594" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>19241/CPU2 (39.97%)</title><rect x="38.7565358759" y="1310.0" width="15.5454984841" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="38.7565358759" y="1332.0" width="15.5454984841" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>19241/CPU3 (11.80%)</title><rect x="54.30203436" y="1310.0" width="4.587196274" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="54.30203436" y="1332.0" width="4.587196274" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="1322.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">19241</text><g><title>19242/CPU0 (37.48%)</title><rect x="20" y="1345.0" width="14.7299969243" height="35.0" fill="rgb(192,204,186)" stroke="rgb(176,188,170)"></rect>
+<text x="20" y="1367.0" width="14.7299969243" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU0</text></g>
+<g><title>19242/CPU1 (11.80%)</title><rect x="34.7299969243" y="1345.0" width="4.63816512149" height="35.0" fill="rgb(192,188,186)" stroke="rgb(176,172,170)"></rect>
+<text x="34.7299969243" y="1367.0" width="4.63816512149" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU1</text></g>
+<g><title>19242/CPU2 (33.20%)</title><rect x="39.3681620458" y="1345.0" width="13.0480249572" height="35.0" fill="rgb(192,172,186)" stroke="rgb(176,156,170)"></rect>
+<text x="39.3681620458" y="1367.0" width="13.0480249572" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU2</text></g>
+<g><title>19242/CPU3 (17.51%)</title><rect x="52.4161870029" y="1345.0" width="6.880794411" height="35.0" fill="rgb(192,156,186)" stroke="rgb(176,140,170)"></rect>
+<text x="52.4161870029" y="1367.0" width="6.880794411" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">CPU3</text></g>
+<text x="20" y="1357.0" width="1000" font-size="12" font-family="monospace" style="text-overflow: clip" fill="#000">19242</text></svg>
