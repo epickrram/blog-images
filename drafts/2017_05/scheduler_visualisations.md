@@ -48,7 +48,7 @@ Let's take a look at an initial example running on my 4-core laptop:
 
 ![Scheduling profile](https://raw.githubusercontent.com/epickrram/blog-images/master/2017_05/scheduler-profile-fragment.png)
 
-[original](https://raw.githubusercontent.com/epickrram/blog-images/master/2017_05/scheduler-profile-initial.svg)
+[original](https://github.com/epickrram/blog-images/blob/master/2017_05/scheduler-profile-initial.svg)
 
 This profile is taken from a simple drop-wizard application, the threads actually processing inbound requests are prefixed with `'dw-'`.
 We can see that these request processing threads were ready to yield the CPU (i.e. entering sleep state) about 30% of the time, but 
@@ -64,7 +64,8 @@ contending with the application for CPU resource.
 
 Using a combination of kernel tuning and thread-pinning, it should be possible to ensure that the application 
 threads are only very rarely pre-empted by essential kernel threads. More details on how to go about achieving 
-this can be found in [previous](jitter1) [posts](jitter2).
+this can be found in [previous](http://epickrram.blogspot.co.uk/2015/09/reducing-system-jitter.html) 
+[posts](http://epickrram.blogspot.co.uk/2015/11/reducing-system-jitter-part-2.html).
 
 ### CPU Tenancy
 
@@ -92,7 +93,7 @@ machine running the application - the IRQ of the network card is associated with
 
 ![CPU tenancy by thread](https://raw.githubusercontent.com/epickrram/blog-images/master/2017_05/thread_irq_locality.png)
 
-[original](https://raw.githubusercontent.com/epickrram/blog-images/master/2017_05/cpu-tenancy-17676.svg)
+[original](https://github.com/epickrram/blog-images/blob/master/2017_05/cpu-tenancy-17676.svg)
 
 ### Further work
 

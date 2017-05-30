@@ -18,11 +18,11 @@
 <figure>
 <img src="https://raw.githubusercontent.com/epickrram/blog-images/master/2017_05/scheduler-profile-fragment.png" alt="Scheduling profile" /><figcaption>Scheduling profile</figcaption>
 </figure>
-<p><a href="https://raw.githubusercontent.com/epickrram/blog-images/master/2017_05/scheduler-profile-initial.svg">original</a></p>
+<p><a href="https://github.com/epickrram/blog-images/blob/master/2017_05/scheduler-profile-initial.svg">original</a></p>
 <p>This profile is taken from a simple drop-wizard application, the threads actually processing inbound requests are prefixed with <code>'dw-'</code>. We can see that these request processing threads were ready to yield the CPU (i.e. entering sleep state) about 30% of the time, but they were mostly attempting to do useful work when they were moved off the CPU. This is a hint that the application is resource constrained in terms of CPU.</p>
 <p>This effect is magnified due to the fact that I'm running a desktop OS, the application, and a load-generator all on the same laptop, but these effects will still be present on a larger system.</p>
 <p>This can be a useful signal that these threads would benefit from their own dedicated pool of CPUs. Further work is needed to annotate the chart with those processes that were switched <em>in</em> by the scheduler - i.e. the processes that are contending with the application for CPU resource.</p>
-<p>Using a combination of kernel tuning and thread-pinning, it should be possible to ensure that the application threads are only very rarely pre-empted by essential kernel threads. More details on how to go about achieving this can be found in <a href="jitter1">previous</a> <a href="jitter2">posts</a>.</p>
+<p>Using a combination of kernel tuning and thread-pinning, it should be possible to ensure that the application threads are only very rarely pre-empted by essential kernel threads. More details on how to go about achieving this can be found in <a href="http://epickrram.blogspot.co.uk/2015/09/reducing-system-jitter.html">previous</a> <a href="http://epickrram.blogspot.co.uk/2015/11/reducing-system-jitter-part-2.html">posts</a>.</p>
 <h3 id="cpu-tenancy">CPU Tenancy</h3>
 <p>One of the operating system's responsibilities is to allocate resources to processes that require CPU. In modern multi-core systems, the scheduler must move runnable threads to otherwise idle CPUs to try to maximise system resource usage.</p>
 <p>A good example if this is network packet handling. When a network packet is received, it is (by default) processed by the CPU that handles the network card's interrupt. The kernel may then decide to migrate any task that is waiting for data to arrive (e.g. a thread blocked on a socket read) to the receiving CPU, since the packet data is more likely to be available in the CPU's cache.</p>
@@ -32,7 +32,7 @@
 <figure>
 <img src="https://raw.githubusercontent.com/epickrram/blog-images/master/2017_05/thread_irq_locality.png" alt="CPU tenancy by thread" /><figcaption>CPU tenancy by thread</figcaption>
 </figure>
-<p><a href="https://raw.githubusercontent.com/epickrram/blog-images/master/2017_05/cpu-tenancy-17676.svg">original</a></p>
+<p><a href="https://github.com/epickrram/blog-images/blob/master/2017_05/cpu-tenancy-17676.svg">original</a></p>
 <h3 id="further-work">Further work</h3>
 <p>To make the <code>scheduling-profile</code> tool more useful, I intend to annotate the <code>runnable</code> state portion of the bar chart with a further breakdown detailing the incoming processes that kicked application threads off-CPU.</p>
 <p>This will provide enough information to direct system-tuning efforts to ensure an application has the best chance possible to get CPU-time when required.</p>
