@@ -1,16 +1,16 @@
 In my last post, I looked at annotating Flamegraphs with contextual information in order to
-aid in filtering on an interesting subset of the data. One of the things that stuck with me
-was the idea of using SVGs to render data generated on a server that runs in headless mode.
+filter on an interesting subset of the data. One of the things that stuck with me
+was the idea of using SVGs to render data generated on a server running in headless mode.
 
 Traditionally, I have recorded profiles and traces on remote servers, then pulled the data
-back to my workstation to filter, aggregate and plot. The scripts used to do this data munging
+back to my workstation to filter, aggregate and plot. The scripts used to do this data-wrangling
 tend to be one-shot affairs, and I've probably lost many useful utilities over the years. I
 am increasingly coming around to the idea of building the rendering into the server-side script, as it forces me to 
 think about how I want to interpret the data, and also gives the ability to deploy and serve
 such monitoring from a whole fleet of servers.
 
 Partly to address this, and partly because experimentation is fun, I've been working on some
-new visualisations in the same vein as Flamegraphs. 
+new visualisations of the same ilk as Flamegraphs. 
 
 
 These tools are available in the [grav](https://github.com/epickrram/grav) repository.
@@ -46,7 +46,9 @@ marked red (the program thread was pre-empted while it still had useful work to 
 
 Let's take a look at an initial example running on my 4-core laptop:
 
-![Scheduling profile](scheduler-profile-fragment.png)
+![Scheduling profile](https://raw.githubusercontent.com/epickrram/blog-images/master/2017_05/scheduler-profile-fragment.png)
+
+[original](https://raw.githubusercontent.com/epickrram/blog-images/master/2017_05/scheduler-profile-initial.svg)
 
 This profile is taken from a simple drop-wizard application, the threads actually processing inbound requests are prefixed with `'dw-'`.
 We can see that these request processing threads were ready to yield the CPU (i.e. entering sleep state) about 30% of the time, but 
@@ -88,7 +90,9 @@ it is clear that they are mostly executed on CPU 2. This correlates with the net
 machine running the application - the IRQ of the network card is associated with CPU 2.
 
 
-![CPU tenancy by thread](thread_irq_locality.png)
+![CPU tenancy by thread](https://raw.githubusercontent.com/epickrram/blog-images/master/2017_05/thread_irq_locality.png)
+
+[original](https://raw.githubusercontent.com/epickrram/blog-images/master/2017_05/cpu-tenancy-17676.svg)
 
 ### Further work
 
